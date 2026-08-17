@@ -1,0 +1,77 @@
+.btn {
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 700;
+  font-size: 1.02rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border: 4px solid var(--ink);
+  background: var(--yellow);
+  color: var(--ink);
+  padding: 14px 26px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.btn.secondary {
+  background: #fff;
+}
+
+.btn.pink {
+  background: var(--pink);
+  color: #fff;
+}
+
+.btn.blue {
+  background: var(--blue);
+  color: #fff;
+}
+
+.btn.ghost {
+  background: transparent;
+  box-shadow: none;
+  border: 3px dashed var(--ink);
+}
+
+.btn.block {
+  width: 100%;
+}
+
+.btn.sm {
+  padding: 9px 18px;
+  font-size: 0.8rem;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  text-decoration: underline;
+  font-family: "Space Grotesk";
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 14px;
+}

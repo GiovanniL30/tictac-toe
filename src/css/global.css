@@ -1,0 +1,55 @@
+:root {
+  --cream: #fff3de; /* page background */
+  --ink: #17181a; /* borders, text, hard shadows */
+  --pink: #ff5c8a; /* Player X accent */
+  --blue: #3aa6ff; /* Player O accent */
+  --yellow: #ffce45; /* CTA / highlight accent */
+  --green: #6fcf6f; /* win-line / success */
+  --lilac: #c9a6ff; /* decorative / spectator accent */
+
+  --shadow-lg: 8px 8px 0 var(--ink);
+  --shadow-md: 5px 5px 0 var(--ink);
+  --shadow-sm: 3px 3px 0 var(--ink);
+
+  --blob: 62% 38% 55% 45% / 45% 55% 45% 55%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--cream);
+  background-image:
+    radial-gradient(
+      circle at 8% 15%,
+      rgba(255, 92, 138, 0.18) 0,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 92% 20%,
+      rgba(58, 166, 255, 0.18) 0,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 15% 90%,
+      rgba(255, 206, 69, 0.25) 0,
+      transparent 40%
+    );
+
+  font-family: "Space Grotesk", sans-serif;
+  color: var(--ink);
+  overflow-x: hidden;
+  position: relative;
+}
+
+#app {
+  width: 100%;
+  max-width: 1200px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 32px 24px;
+}

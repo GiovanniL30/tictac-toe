@@ -1,0 +1,29 @@
+.toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+
+  transform: translateX(-50%) translateY(-30px);
+
+  background: var(--ink);
+  color: var(--cream);
+  font-weight: 700;
+  font-family: "Baloo 2";
+  padding: 10px 20px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+
+  z-index: 50;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
