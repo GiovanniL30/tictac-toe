@@ -1,23 +1,89 @@
+import { GameStorage } from "../state/GameStorage.js";
+
 export class Game {
   constructor(props = {}) {
     this.boardSize = 3;
     this.props = props;
+
     this.polling = null;
+    this.storageListener = null;
+
+    this.scoreboard = null;
+    this.boardContainer = null;
+
+    this.gameOver = false;
+    this.lastWinner = null;
   }
 
   render() {
     const container = document.createElement("div");
     container.classList.add("game-room-container");
 
+    const scoreboard = this.generateScoreBoard();
     const gameBoard = this.generateBoard();
 
-    container.append(gameBoard);
+    this.scoreboard = scoreboard;
 
+    container.append(scoreboard, gameBoard);
+
+    this.startStorageListener();
     this.startPolling();
 
     return container;
   }
 
+  // SCOREBOARD
+  generateScoreBoard() {
+    const container = document.createElement("div");
+    container.classList.add("scoreboard");
+
+    const vsBadge = document.createElement("div");
+    vsBadge.classList.add("vs-badge");
+    vsBadge.textContent = "vs";
+
+    const players = GameStorage.getPlayers(this.props.key);
+    const scores = GameStorage.getScores(this.props.key);
+
+    ["X", "O"].forEach((player, i) => {
+      const card = document.createElement("div");
+      card.classList.add("score-card");
+
+      const chip = document.createElement("span");
+      chip.classList.add("chip", player.toLowerCase());
+      chip.textContent = player;
+
+      const scoreInfo = document.createElement("div");
+      scoreInfo.classList.add("score-info");
+
+      const name = document.createElement("span");
+      name.classList.add("name");
+      name.textContent = players[player] ?? "Waiting...";
+
+      const wins = document.createElement("span");
+      wins.classList.add("wins");
+      wins.textContent = scores[player] ?? 0;
+
+      scoreInfo.append(name, wins);
+
+      card.append(chip, scoreInfo);
+      container.append(card);
+
+      if (i === 0) {
+        container.append(vsBadge);
+      }
+    });
+
+    return container;
+  }
+
+  refreshScoreBoard() {
+    const newScoreboard = this.generateScoreBoard();
+    this.scoreboard.replaceWith(newScoreboard);
+
+    this.scoreboard = newScoreboard;
+  }
+
+  // BOARD
   generateBoard() {
     const boardWrapper = document.createElement("div");
     boardWrapper.classList.add("board-wrap");
@@ -53,11 +119,18 @@ export class Game {
 
   updateBoard(response) {
     const board = response.split(":");
+
     const currentTurn = this.getCurrentTurn(board);
 
     this.props.onTurnChange(currentTurn);
 
-    const isMyTurn = currentTurn === this.props.player;
+    const winner = this.getWinner(board);
+
+    if (winner && !this.gameOver) {
+      this.handleGameEnd(winner);
+    }
+
+    const isMyTurn = !this.gameOver && currentTurn === this.props.player;
 
     const cells = this.boardContainer.querySelectorAll(".cell");
 
@@ -70,9 +143,7 @@ export class Game {
 
       if (!isEmpty) {
         const chip = document.createElement("span");
-
         chip.classList.add("chip", value.toLowerCase());
-
         chip.textContent = value;
 
         cell.append(chip);
@@ -86,13 +157,65 @@ export class Game {
     });
   }
 
+  // GAME LOGIC
   getCurrentTurn(board) {
     const xCount = board.filter((value) => value === "X").length;
+
     const oCount = board.filter((value) => value === "O").length;
 
     return xCount <= oCount ? "X" : "O";
   }
 
+  getWinner(board) {
+    const winningPatterns = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+
+    for (const [a, b, c] of winningPatterns) {
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+        return board[a];
+      }
+    }
+
+    const isDraw = board.every((value) => value === "X" || value === "O");
+
+    if (isDraw) {
+      return "DRAW";
+    }
+
+    return null;
+  }
+
+  handleGameEnd(winner) {
+    this.gameOver = true;
+    this.lastWinner = winner;
+
+    if (winner === "DRAW") {
+      this.props.onDraw?.();
+      return;
+    }
+
+    if (winner === this.props.player) {
+      GameStorage.incrementWin(this.props.key, winner);
+
+      this.props.onWin?.(winner);
+    } else {
+      this.props.onLoss?.(winner);
+    }
+
+    this.refreshScoreBoard();
+  }
+
+  // POLLING
   startPolling() {
     this.checkBoard();
 
@@ -116,5 +239,34 @@ export class Game {
     } catch (error) {
       console.error("Failed to synchronize board:", error);
     }
+  }
+
+  // LOCAL STORAGE SYNC
+  startStorageListener() {
+    this.storageListener = (event) => {
+      if (event.key === GameStorage.getPlayersKey(this.props.key)) {
+        this.refreshScoreBoard();
+      }
+
+      if (event.key === GameStorage.getScoresKey(this.props.key)) {
+        this.refreshScoreBoard();
+      }
+    };
+
+    window.addEventListener("storage", this.storageListener);
+  }
+
+  stopStorageListener() {
+    if (this.storageListener) {
+      window.removeEventListener("storage", this.storageListener);
+
+      this.storageListener = null;
+    }
+  }
+
+  //CLEAN UP
+  destroy() {
+    this.stopPolling();
+    this.stopStorageListener();
   }
 }

@@ -6,6 +6,7 @@ import { JoinRoom } from "../pages/JoinRoom.js";
 import { WaitingRoom } from "../pages/WaitingRoom.js";
 import { LocalHostApi } from "../services/LocalHostApi.js";
 import { GameState } from "../state/GameState.js";
+import { GameStorage } from "../state/GameStorage.js";
 
 export class MainPage {
   constructor() {
@@ -53,11 +54,14 @@ export class MainPage {
               this.gameState.key = key;
               this.gameState.currentPlayer = response;
               this.gameState.playerName = playerName;
+
               this.gameState.saveSession();
+              GameStorage.createPlayers(key, playerName, response);
+
               this.setState(GameState.PAGE_STATES.WAITING_ROOM);
               new Toast("Created a new room.");
             } catch (e) {
-              new Toast("Failed to create new room.");
+              new Toast("Failed to create new room." + e);
             }
           },
         });
@@ -78,6 +82,8 @@ export class MainPage {
               }
 
               this.gameState.saveSession();
+              GameStorage.setPlayer(key, playerName, response);
+
               this.setState(GameState.PAGE_STATES.GAME_START);
             } catch (e) {
               new Toast("Failed to join the room.");
@@ -110,6 +116,7 @@ export class MainPage {
 
       case GameState.PAGE_STATES.GAME_START:
         return new Game({
+          key: this.gameState.key,
           player: this.gameState.currentPlayer,
 
           onCheckBoard: () => {

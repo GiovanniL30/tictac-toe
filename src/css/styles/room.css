@@ -14,7 +14,8 @@
 }
 
 .create-room-container form,
-.join-room-container form {
+.join-room-container form,
+.game-room-container > div {
   max-width: 500px;
 }
 
