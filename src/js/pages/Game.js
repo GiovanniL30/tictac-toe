@@ -5,6 +5,8 @@ export class Game {
     this.boardSize = 3;
     this.props = props;
 
+    this.currentBoardState = null;
+
     this.polling = null;
     this.storageListener = null;
 
@@ -83,6 +85,14 @@ export class Game {
     this.scoreboard = newScoreboard;
   }
 
+  //PLAYER TURN
+  generatePlayerTurn() {
+    const currentTurn = this.getCurrentTurn(this.currentBoardState);
+    const isMyTurn = !this.gameOver && currentTurn === this.props.player;
+
+    const container = document.createElement("div");
+  }
+
   // BOARD
   generateBoard() {
     const boardWrapper = document.createElement("div");
@@ -90,6 +100,10 @@ export class Game {
 
     const boardContainer = document.createElement("div");
     boardContainer.classList.add("board");
+
+    if (this.props.player == "spectator") {
+      boardContainer.classList.add("locked");
+    }
 
     this.boardContainer = boardContainer;
 
@@ -119,6 +133,7 @@ export class Game {
 
   updateBoard(response) {
     const board = response.split(":");
+    this.currentBoardState = board;
 
     const currentTurn = this.getCurrentTurn(board);
 
@@ -153,6 +168,10 @@ export class Game {
         cell.classList.remove("no-click");
       } else {
         cell.classList.add("no-click");
+      }
+
+      if (this.props.player == "spectator") {
+        cell.classList.add("locked");
       }
     });
   }

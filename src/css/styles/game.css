@@ -168,7 +168,8 @@
 }
 
 .board.locked {
-  filter: saturate(0.7);
+  filter: saturate(0.4);
+  opacity: 90%;
 }
 
 .cell {
@@ -205,6 +206,10 @@
   cursor: default;
 }
 
+.cell.locked {
+  cursor: not-allowed;
+}
+
 .cell svg {
   width: 58%;
   height: 58%;
@@ -231,6 +236,7 @@
   stroke-dashoffset: 400;
   transition: stroke-dashoffset 0.4s ease;
 }
+
 .win-line.show path {
   stroke-dashoffset: 0;
 }
