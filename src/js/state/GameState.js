@@ -8,16 +8,10 @@ export class GameState {
     SPECTATOR: "spectator",
   };
 
-  static PLAYERS = {
-    X: "X",
-    O: "O",
-    SPECTATOR: "SPECTATOR",
-  };
-
   constructor() {
     this.key = null;
     this.currentPlayer = null;
-    this.spectatorCount = 0;
+    ((this.playerName = null), (this.spectatorCount = 0));
     this.pageState = GameState.PAGE_STATES.HOME;
   }
 
@@ -27,6 +21,7 @@ export class GameState {
       JSON.stringify({
         key: this.key,
         player: this.currentPlayer,
+        playerName: this.playerName,
       }),
     );
   }
@@ -42,6 +37,7 @@ export class GameState {
 
     this.key = data.key;
     this.currentPlayer = data.player;
+    this.playerName = data.playerName;
 
     return true;
   }

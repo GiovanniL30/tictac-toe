@@ -21,6 +21,7 @@
     transform 0.25s ease;
 
   z-index: 50;
+  text-align: center;
 }
 
 .toast.show {

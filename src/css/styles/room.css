@@ -1,5 +1,6 @@
 .create-room-container,
-.join-room-container {
+.join-room-container,
+.waiting-room-container {
   display: flex;
   width: 100%;
   justify-content: center;
@@ -16,7 +17,17 @@
   max-width: 500px;
 }
 
+.waiting-room-container > div {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+}
+
 .code-plate {
+  width: 100%;
+  max-width: 500px;
   background: var(--yellow);
   border: 5px solid var(--ink);
   border-radius: 20px;
@@ -30,6 +41,10 @@
   gap: 6px;
 }
 
+.code-plate > button {
+  margin-top: 15px;
+}
+
 .code-plate .label {
   font-size: 0.75rem;
   font-weight: 700;
@@ -39,7 +54,7 @@
 
 .code-letters {
   display: flex;
-  gap: 6px;
+  gap: 10px;
 }
 
 .code-letters span {

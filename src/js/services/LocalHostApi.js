@@ -18,10 +18,10 @@ export class LocalHostApi extends ApiClient {
   }
 
   checkGameStatus(key) {
-    return this.get(`/reset?check=${key}`);
+    return this.get(`/check?key=${key}`);
   }
 
   checkBoardStatus(key) {
-    return this.get(`/reset?board=${key}`);
+    return this.get(`/board?key=${key}`);
   }
 }

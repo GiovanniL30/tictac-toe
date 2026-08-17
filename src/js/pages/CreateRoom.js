@@ -1,3 +1,4 @@
+import { BackButton } from "../components/BackButton.js";
 import { Button } from "../components/Button.js";
 import { Input } from "../components/Input.js";
 import { InputField } from "../components/InputField.js";
@@ -10,9 +11,9 @@ export class CreateRoom {
     const container = document.createElement("div");
     container.classList.add("create-room-container");
     const form = this.createForm();
-    const backButton = this.createBackButton();
+    const backButton = new BackButton(() => this.props.onBack());
 
-    container.append(form, backButton);
+    container.append(form, backButton.element);
     return container;
   }
 
@@ -49,7 +50,7 @@ export class CreateRoom {
     form.addEventListener("submit", (e) => {
       e.preventDefault();
 
-      const name = nameField.getInputValue();
+      const name = nameField.getInputValue().trim();
 
       if (name.length < 3) {
         errorMessage.textContent =
@@ -61,18 +62,9 @@ export class CreateRoom {
 
       errorMessage.classList.remove("show");
 
-      this.props.onRoomCreate(playerName);
+      this.props.onRoomCreate(name);
     });
 
     return form;
-  }
-
-  createBackButton() {
-    const backBtn = document.createElement("button");
-    backBtn.textContent = "← back";
-    backBtn.classList.add("sm", "link-btn");
-    backBtn.addEventListener("click", () => this.props.onBack());
-
-    return backBtn;
   }
 }

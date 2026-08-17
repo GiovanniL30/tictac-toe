@@ -29,6 +29,12 @@ export class MainPage {
   }
 
   createPage() {
+    const session = this.gameState.restoreSession();
+
+    if (session) {
+      this.setState(GameState.PAGE_STATES.JOIN_ROOM);
+    }
+
     switch (this.gameState.pageState) {
       case GameState.PAGE_STATES.HOME:
         return new Home({
@@ -46,6 +52,7 @@ export class MainPage {
               const response = await this.api.createGame(key);
               this.gameState.key = key;
               this.gameState.currentPlayer = response;
+              this.gameState.playerName = playerName;
               this.gameState.saveSession();
               this.setState(GameState.PAGE_STATES.WAITING_ROOM);
               new Toast("Created a new room.");
@@ -58,10 +65,48 @@ export class MainPage {
       case GameState.PAGE_STATES.JOIN_ROOM:
         return new JoinRoom({
           onBack: () => this.setState(GameState.PAGE_STATES.HOME),
+          onJoin: async (key, playerName) => {
+            try {
+              const response = await this.api.createGame(key);
+              this.gameState.key = key;
+              this.gameState.playerName = playerName;
+
+              if (response == "X" || response == "O") {
+                this.gameState.currentPlayer = response;
+              } else {
+                this.gameState.currentPlayer = "spectator";
+              }
+
+              this.gameState.saveSession();
+              this.setState(GameState.PAGE_STATES.GAME_START);
+            } catch (e) {
+              new Toast("Failed to join the room.");
+            }
+          },
         });
 
       case GameState.PAGE_STATES.WAITING_ROOM:
-        return new WaitingRoom();
+        return new WaitingRoom({
+          key: this.gameState.key,
+
+          onCheckRoom: () => {
+            return this.api.checkGameStatus(this.gameState.key);
+          },
+
+          onGameStart: () => {
+            this.setState(GameState.PAGE_STATES.GAME_START);
+            new Toast("Player joined! Starting game.");
+          },
+
+          onBack: async () => {
+            try {
+              await this.api.resetGame(this.gameState.key);
+            } catch (e) {}
+
+            this.setState(GameState.PAGE_STATES.HOME);
+            new Toast("Game room canceled.");
+          },
+        });
 
       case GameState.PAGE_STATES.GAME_START:
         return new Game();
