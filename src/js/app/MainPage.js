@@ -29,11 +29,11 @@ export class MainPage {
   }
 
   createPage() {
-    const session = this.gameState.restoreSession();
+    // const session = this.gameState.restoreSession();
 
-    if (session) {
-      this.setState(GameState.PAGE_STATES.JOIN_ROOM);
-    }
+    // if (session) {
+    //   this.setState(GameState.PAGE_STATES.JOIN_ROOM);
+    // }
 
     switch (this.gameState.pageState) {
       case GameState.PAGE_STATES.HOME:
@@ -109,7 +109,38 @@ export class MainPage {
         });
 
       case GameState.PAGE_STATES.GAME_START:
-        return new Game();
+        return new Game({
+          player: this.gameState.currentPlayer,
+
+          onCheckBoard: () => {
+            return this.api.checkBoardStatus(this.gameState.key);
+          },
+
+          onTurnChange: (currentTurn) => {
+            this.gameState.currentTurn = currentTurn;
+          },
+
+          onCellClick: async (i) => {
+            if (this.gameState.currentTurn !== this.gameState.currentPlayer) {
+              return;
+            }
+
+            const x = i % 3;
+            const y = Math.floor(i / 3);
+
+            try {
+              await this.api.addMove({
+                key: this.gameState.key,
+                tile: this.gameState.currentPlayer,
+                x,
+                y,
+              });
+            } catch (e) {
+              console.error(e);
+              new Toast("Failed to make move.");
+            }
+          },
+        });
 
       default:
         throw new Error(`Unknown page state: ${this.gameState.pageState}`);

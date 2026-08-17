@@ -1,6 +1,7 @@
 .create-room-container,
 .join-room-container,
-.waiting-room-container {
+.waiting-room-container,
+.game-room-container {
   display: flex;
   width: 100%;
   justify-content: center;

@@ -11,7 +11,8 @@ export class GameState {
   constructor() {
     this.key = null;
     this.currentPlayer = null;
-    ((this.playerName = null), (this.spectatorCount = 0));
+    this.playerName = null;
+    this.spectatorCount = 0;
     this.pageState = GameState.PAGE_STATES.HOME;
   }
 
