@@ -57,17 +57,14 @@ export class ResetGameModal extends Modal {
 
     this.drawMascots = drawMascots;
 
+    this.modalContainer.querySelector("h2").textContent = message;
+
     this.generateContent(message, imgSrc);
     this.modalContainer.append(this.generateButtons());
   }
 
   generateContent(message, imgSrc) {
     if (this.isSpectator) {
-      const p = document.createElement("p");
-      p.textContent = message;
-
-      this.modalContainer.append(p);
-
       return;
     }
 
@@ -97,11 +94,6 @@ export class ResetGameModal extends Modal {
 
       messageContainer.append(sticker);
     }
-
-    const p = document.createElement("p");
-    p.textContent = message;
-
-    messageContainer.append(p);
 
     // O gets the waiting message
     if (this.player === "O") {
