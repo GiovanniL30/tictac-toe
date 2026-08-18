@@ -31,6 +31,11 @@ export class Game {
 
     container.append(roomKey, scoreboard, playerTurn, gameBoard);
 
+    if (this.props.player === "spectator") {
+      const spectator = this.generateSpectatorBanner();
+      container.append(spectator);
+    }
+
     this.startStorageListener();
     this.startPolling();
 
@@ -49,6 +54,15 @@ export class Game {
     p.textContent = "Room " + this.props.key;
 
     container.append(dot, p);
+
+    return container;
+  }
+
+  // SPECTATOR BANNER
+  generateSpectatorBanner() {
+    const container = document.createElement("div");
+    container.classList.add("spectator-banner");
+    container.textContent = "You're spectating, sit back and enjoy the match";
 
     return container;
   }
