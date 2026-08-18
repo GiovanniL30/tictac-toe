@@ -34,7 +34,9 @@ export class Game {
     this.playerTurn = playerTurn;
     this.scoreboard = scoreboard;
 
-    container.append(roomKey, scoreboard, playerTurn, gameBoard, spectators);
+    const topbar = this.generateTopbar(roomKey, spectators);
+
+    container.append(topbar, scoreboard, playerTurn, gameBoard);
 
     if (this.props.player === "spectator") {
       const spectator = this.generateSpectatorBanner();
@@ -61,6 +63,15 @@ export class Game {
     container.append(dot, p);
 
     return container;
+  }
+
+  generateTopbar(roomTag, spectators) {
+    const topbar = document.createElement("div");
+    topbar.classList.add("game-topbar");
+
+    topbar.append(roomTag, spectators);
+
+    return topbar;
   }
 
   // SPECTATOR BANNER

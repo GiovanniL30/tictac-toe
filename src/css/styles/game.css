@@ -1,26 +1,61 @@
 /* =========================================================
    ROOM TAG
    ========================================================= */
-.room-tag {
+.game-topbar {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: #fff;
   border: 3px solid var(--ink);
   border-radius: 999px;
-  padding: 5px 14px 5px 6px;
+  padding: 6px 14px;
   box-shadow: var(--shadow-sm);
-  margin-bottom: 14px;
-  font-size: 0.8rem;
+}
+
+.game-topbar .room-tag,
+.game-topbar .spectators {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  margin: 0;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
-.room-tag .dot {
+.game-topbar .spectators {
+  padding-left: 10px;
+  border-left: 2px solid var(--ink);
+}
+
+.game-topbar p {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.game-topbar .dot {
   width: 10px;
   height: 10px;
-  border-radius: var(--blob);
-  background: var(--yellow);
+  border-radius: 50%;
   border: 2px solid var(--ink);
+  flex-shrink: 0;
+}
+
+.game-topbar .room-tag .dot {
+  background: var(--yellow);
+  border-radius: var(--blob);
+}
+
+.game-topbar .spectators .dot {
+  background: var(--lilac);
 }
 
 /* =========================================================
@@ -101,30 +136,6 @@
 /* =========================================================
    SPECTATOR COUNT
    ========================================================= */
-.spectators {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  background: #fff;
-  border: 3px solid var(--ink);
-  border-radius: 999px;
-  padding: 5px 14px;
-  box-shadow: var(--shadow-sm);
-}
-
-.spectators .dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--lilac);
-  border: 2px solid var(--ink);
-}
 
 /* =========================================================
    TURN INDICATOR PILL
