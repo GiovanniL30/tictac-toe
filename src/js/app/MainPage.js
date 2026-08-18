@@ -22,6 +22,9 @@ export class MainPage {
     this.activeModal = null;
     this.activeGame = null;
 
+    this.leaving = false;
+    this.pageExitHandler = null;
+
     this.render();
   }
 
@@ -60,6 +63,7 @@ export class MainPage {
               GameStorage.createPlayers(key, playerName, response);
 
               this.openChannel(key);
+              this.registerPageExit();
 
               this.setState(GameState.PAGE_STATES.WAITING_ROOM);
               new Toast("Created a new room.");
@@ -87,6 +91,7 @@ export class MainPage {
                   playerName,
                 );
                 this.openChannel(key);
+                this.registerPageExit();
                 this.setState(GameState.PAGE_STATES.GAME_START);
                 new Toast("Game already started, joining as spectator.");
                 return;
@@ -101,6 +106,7 @@ export class MainPage {
               }
 
               this.openChannel(key);
+              this.registerPageExit();
 
               this.setState(GameState.PAGE_STATES.GAME_START);
             } catch (e) {
@@ -127,6 +133,9 @@ export class MainPage {
               await this.api.resetGame(this.gameState.key);
             } catch (e) {}
 
+            this.leaving = true;
+            GameStorage.removeRoom(this.gameState.key);
+            this.deregisterPageExit();
             this.closeChannel();
             this.setState(GameState.PAGE_STATES.HOME);
             new Toast("Game room canceled.");
@@ -134,13 +143,26 @@ export class MainPage {
         });
 
       case GameState.PAGE_STATES.GAME_START:
-        return new Game({
+        const game = new Game({
           key: this.gameState.key,
           player: this.gameState.playerCode,
           spectatorId: this.gameState.spectatorId,
 
           onCheckBoard: () => {
             return this.api.checkBoardStatus(this.gameState.key);
+          },
+
+          onCheckStatus: () => {
+            return this.api.checkGameStatus(this.gameState.key);
+          },
+
+          onOpponentQuit: () => {
+            if (this.activeModal) {
+              return;
+            }
+
+            this.activeGame = game;
+            this.handleOpponentQuit();
           },
 
           onTurnChange: (currentTurn) => {
@@ -188,6 +210,10 @@ export class MainPage {
             }
           },
         });
+
+        this.activeGame = game;
+
+        return game;
 
       default:
         throw new Error(`Unknown page state: ${this.gameState.pageState}`);
@@ -266,9 +292,13 @@ export class MainPage {
     this.activeModal = null;
     this.activeGame = null;
 
+    this.leaving = true;
+    GameStorage.removeRoom(this.gameState.key);
+
     this.gameState.clearSession();
     this.gameState.clearData();
 
+    this.deregisterPageExit();
     this.closeChannel();
 
     this.setState(GameState.PAGE_STATES.HOME);
@@ -288,13 +318,52 @@ export class MainPage {
     this.activeModal = null;
     this.activeGame = null;
 
+    this.leaving = true;
+    GameStorage.removeRoom(this.gameState.key);
+
     new Toast("The other player left the game.");
 
     this.gameState.clearSession();
     this.gameState.clearData();
 
+    this.deregisterPageExit();
     this.closeChannel();
     this.setState(GameState.PAGE_STATES.HOME);
+  }
+
+  // PAGE EXIT (refresh / tab quit)
+  registerPageExit() {
+    if (this.pageExitHandler) {
+      return;
+    }
+
+    this.pageExitHandler = () => {
+      if (this.leaving) {
+        return;
+      }
+
+      if (!this.gameState.key) {
+        return;
+      }
+
+      if (this.gameState.playerCode !== "X" && this.gameState.playerCode !== "O") {
+        return;
+      }
+
+      this.api.resetGame(this.gameState.key, { keepalive: true }).catch(() => {});
+      GameStorage.removeRoom(this.gameState.key);
+    };
+
+    window.addEventListener("pagehide", this.pageExitHandler);
+    window.addEventListener("beforeunload", this.pageExitHandler);
+  }
+
+  deregisterPageExit() {
+    if (this.pageExitHandler) {
+      window.removeEventListener("pagehide", this.pageExitHandler);
+      window.removeEventListener("beforeunload", this.pageExitHandler);
+      this.pageExitHandler = null;
+    }
   }
 
   // BROADCAST CHANNEL

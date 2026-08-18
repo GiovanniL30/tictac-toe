@@ -161,4 +161,10 @@ export class GameStorage {
 
     return spectators.length;
   }
+
+  static removeRoom(roomKey) {
+    localStorage.removeItem(this.getPlayersKey(roomKey));
+    localStorage.removeItem(this.getScoresKey(roomKey));
+    localStorage.removeItem(this.getSpectatorsKey(roomKey));
+  }
 }

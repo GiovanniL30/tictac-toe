@@ -16,6 +16,8 @@ export class Game {
 
     this.gameOver = false;
     this.lastWinner = null;
+    this.gameStarted = false;
+    this.quitting = false;
   }
 
   render() {
@@ -363,6 +365,21 @@ export class Game {
 
       this.updateBoard(response);
       this.updateSpectatorCount();
+
+      if (this.props.onCheckStatus) {
+        const status = await this.props.onCheckStatus();
+
+        if (status === "true") {
+          this.gameStarted = true;
+        }
+
+        if (status === "false" && this.gameStarted && !this.quitting) {
+          this.quitting = true;
+          this.stopPolling();
+          this.stopStorageListener();
+          this.props.onOpponentQuit?.();
+        }
+      }
     } catch (error) {
       console.error("Failed to synchronize board:", error);
     }

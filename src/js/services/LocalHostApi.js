@@ -13,8 +13,8 @@ export class LocalHostApi extends ApiClient {
     return this.get(`/move?key=${key}&tile=${tile}&y=${y}&x=${x}`);
   }
 
-  resetGame(key) {
-    return this.get(`/reset?key=${key}`);
+  resetGame(key, options = {}) {
+    return this.get(`/reset?key=${key}`, options);
   }
 
   checkGameStatus(key) {
