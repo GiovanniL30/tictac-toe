@@ -10,6 +10,7 @@ export class Game {
     this.polling = null;
     this.storageListener = null;
 
+    this.playerTurn = null;
     this.scoreboard = null;
     this.boardContainer = null;
 
@@ -21,12 +22,14 @@ export class Game {
     const container = document.createElement("div");
     container.classList.add("game-room-container");
 
+    const playerTurn = this.generatePlayerTurn();
     const scoreboard = this.generateScoreBoard();
     const gameBoard = this.generateBoard();
 
+    this.playerTurn = playerTurn;
     this.scoreboard = scoreboard;
 
-    container.append(scoreboard, gameBoard);
+    container.append(scoreboard, playerTurn, gameBoard);
 
     this.startStorageListener();
     this.startPolling();
@@ -87,10 +90,44 @@ export class Game {
 
   //PLAYER TURN
   generatePlayerTurn() {
-    const currentTurn = this.getCurrentTurn(this.currentBoardState);
-    const isMyTurn = !this.gameOver && currentTurn === this.props.player;
-
     const container = document.createElement("div");
+    container.classList.add("turn-indicator");
+
+    return container;
+  }
+
+  updatePlayerTurn(currentTurn) {
+    const players = GameStorage.getPlayers(this.props.key);
+    const playerName = players[currentTurn] ?? `Player ${currentTurn}`;
+
+    this.playerTurn.className = "turn-indicator";
+    this.playerTurn.classList.add(currentTurn.toLowerCase());
+
+    // Game is over
+    if (this.gameOver) {
+      if (this.lastWinner === "DRAW") {
+        this.playerTurn.textContent = "It's a draw!";
+      } else if (this.lastWinner === this.props.player) {
+        this.playerTurn.textContent = "You win!";
+      } else {
+        this.playerTurn.textContent = `${playerName} wins!`;
+      }
+
+      return;
+    }
+
+    // Spectator
+    if (this.props.player === "spectator") {
+      this.playerTurn.textContent = `${playerName}'s turn`;
+
+      return;
+    }
+
+    const isMyTurn = currentTurn === this.props.player;
+
+    this.playerTurn.textContent = isMyTurn
+      ? "Your turn"
+      : `Waiting for ${playerName}'s move`;
   }
 
   // BOARD
@@ -145,6 +182,8 @@ export class Game {
       this.handleGameEnd(winner);
     }
 
+    this.updatePlayerTurn(currentTurn);
+
     const isMyTurn = !this.gameOver && currentTurn === this.props.player;
 
     const cells = this.boardContainer.querySelectorAll(".cell");
@@ -190,11 +229,9 @@ export class Game {
       [0, 1, 2],
       [3, 4, 5],
       [6, 7, 8],
-
       [0, 3, 6],
       [1, 4, 7],
       [2, 5, 8],
-
       [0, 4, 8],
       [2, 4, 6],
     ];

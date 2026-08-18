@@ -4,11 +4,11 @@
 .game-room-container {
   display: flex;
   width: 100%;
+  flex: 1;
+  min-height: 0;
+
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  margin-top: -65px !important;
-
   flex-direction: column;
   gap: 10px;
 }
