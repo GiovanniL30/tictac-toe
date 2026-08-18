@@ -281,9 +281,11 @@ export class Game {
 
     if (winner !== "DRAW") {
       this.refreshScoreBoard();
-    }
 
-    GameStorage.incrementWin(this.props.key, winner);
+      if (this.props.player === winner) {
+        GameStorage.incrementWin(this.props.key, winner);
+      }
+    }
     this.props.onGameEnd(winner, this);
   }
 
