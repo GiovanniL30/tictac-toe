@@ -212,6 +212,11 @@ export class Game {
       this.handleGameEnd(winner);
     }
 
+    if (!winner && this.gameOver) {
+      this.gameOver = false;
+      this.lastWinner = null;
+    }
+
     this.updatePlayerTurn(currentTurn);
 
     const isMyTurn = !this.gameOver && currentTurn === this.props.player;
