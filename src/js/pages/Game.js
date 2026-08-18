@@ -2,7 +2,6 @@ import { GameStorage } from "../state/GameStorage.js";
 
 export class Game {
   constructor(props = {}) {
-    this.boardSize = 3;
     this.props = props;
 
     this.currentBoardState = null;
@@ -161,7 +160,7 @@ export class Game {
 
     this.boardContainer = boardContainer;
 
-    const totalCells = this.boardSize ** 2;
+    const totalCells = 9;
 
     for (let i = 0; i < totalCells; i++) {
       const cell = document.createElement("div");
@@ -186,7 +185,7 @@ export class Game {
   }
 
   updateBoard(response) {
-    const board = response.split(":");
+    const board = response.split(":").slice(0, 9);
     this.currentBoardState = board;
 
     const currentTurn = this.getCurrentTurn(board);
@@ -207,16 +206,24 @@ export class Game {
 
     cells.forEach((cell, i) => {
       const value = board[i];
-
       const isEmpty = value !== "X" && value !== "O";
 
+      if (cell.dataset.value === value) {
+        if (isEmpty && isMyTurn) {
+          cell.classList.remove("no-click");
+        } else {
+          cell.classList.add("no-click");
+        }
+        return;
+      }
+
+      cell.dataset.value = value;
       cell.replaceChildren();
 
       if (!isEmpty) {
         const chip = document.createElement("span");
         chip.classList.add("chip", value.toLowerCase());
         chip.textContent = value;
-
         cell.append(chip);
       }
 
@@ -261,9 +268,15 @@ export class Game {
 
     const isDraw = board.every((value) => value === "X" || value === "O");
 
+    console.log(board);
+    console.log(isDraw);
+
     if (isDraw) {
+      console.log("Draw");
       return "DRAW";
     }
+
+    console.log("WInner null");
 
     return null;
   }

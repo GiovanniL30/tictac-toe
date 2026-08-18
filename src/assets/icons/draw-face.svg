@@ -1,0 +1,23 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- decorative "tie" accents: overlapping pink/blue dots, one from each side -->
+  <circle cx="166" cy="44" r="8" fill="#FF5C8A" stroke="#17181A" stroke-width="3"/>
+  <circle cx="178" cy="44" r="8" fill="#3AA6FF" stroke="#17181A" stroke-width="3" opacity="0.9"/>
+  <circle cx="24" cy="152" r="7" fill="#3AA6FF" stroke="#17181A" stroke-width="3"/>
+  <circle cx="35" cy="152" r="7" fill="#FF5C8A" stroke="#17181A" stroke-width="3" opacity="0.9"/>
+
+  <!-- blob face -->
+  <path d="M100,22 C135,18 168,40 176,72 C184,104 176,142 148,164 C120,186 82,188 54,168
+           C26,148 14,112 22,78 C30,44 65,26 100,22 Z"
+        fill="#FFF3DE" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- neutral flat eyes -->
+  <line x1="58" y1="94" x2="84" y2="94" stroke="#17181A" stroke-width="9" stroke-linecap="round"/>
+  <line x1="116" y1="94" x2="142" y2="94" stroke="#17181A" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- one raised eyebrow (shrug/meh energy), one relaxed -->
+  <path d="M55,72 Q70,64 86,72" fill="none" stroke="#17181A" stroke-width="7" stroke-linecap="round"/>
+  <line x1="116" y1="76" x2="142" y2="76" stroke="#17181A" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- flat "meh" mouth with a slight wobble -->
+  <path d="M62,132 Q80,138 100,132 T138,132" fill="none" stroke="#17181A" stroke-width="10" stroke-linecap="round"/>
+</svg>
