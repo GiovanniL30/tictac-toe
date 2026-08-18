@@ -129,16 +129,22 @@ export class MainPage {
             this.gameState.currentTurn = currentTurn;
           },
 
-          onGameEnd: (winner) => {
-            new ResetGameModal({
+          onGameEnd: (winner, game) => {
+            const modal = new ResetGameModal({
               title: "Game Over!",
               winner,
               player: this.gameState.currentPlayer,
-              isSpectator: this.gameState.currentPlayer == "spectator",
+              isSpectator: this.gameState.currentPlayer === "spectator",
               key: this.gameState.key,
-            }).show();
-          },
 
+              onPlayAgain: () => this.playAgain(modal, game),
+              onSpectatorLeave: () => this.leaveGame(modal, game),
+              onSpectatorStay: () => modal.hide(),
+              onQuitGame: () => this.quitGame(modal, game),
+            });
+
+            modal.show();
+          },
           onCellClick: async (i) => {
             if (this.gameState.currentTurn !== this.gameState.currentPlayer) {
               return;
@@ -178,7 +184,32 @@ export class MainPage {
     return code;
   }
 
-  playAgain() {}
+  async playAgain(modal, game) {
+    try {
+      await this.api.resetGame(this.gameState.key);
+      game.destroy();
+      modal.hide();
+      this.setState(GameState.PAGE_STATES.GAME_START);
+    } catch (e) {
+      new Toast("Failed to reset game." + e);
+    }
+  }
 
-  quitGame() {}
+  async quitGame(modal, game) {
+    try {
+      await this.api.resetGame(this.gameState.key);
+      this.leaveGame(modal, game);
+    } catch (e) {
+      new Toast("Failed to quit game.");
+    }
+  }
+
+  leaveGame(modal, game) {
+    game.destroy();
+    this.gameState.clearSession();
+    this.gameState.clearData();
+    this.setState(GameState.PAGE_STATES.HOME);
+    modal.hide();
+    cleanUpCallback();
+  }
 }

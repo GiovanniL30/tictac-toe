@@ -3,10 +3,24 @@ import { Button } from "../Button.js";
 import { Modal } from "./Modal.js";
 
 export class ResetGameModal extends Modal {
-  constructor({ title, winner, player, isSpectator, key }) {
+  constructor({
+    title,
+    winner,
+    player,
+    isSpectator,
+    key,
+    onPlayAgain,
+    onSpectatorLeave,
+    onSpectatorStay,
+    onQuitGame,
+  }) {
     super({ title });
 
     this.isSpectator = isSpectator;
+    this.onPlayAgain = onPlayAgain;
+    this.onSpectatorLeave = onSpectatorLeave;
+    this.onSpectatorStay = onSpectatorStay;
+    this.onQuitGame = onQuitGame;
 
     const players = GameStorage.getPlayers(key);
 
@@ -54,7 +68,16 @@ export class ResetGameModal extends Modal {
       text: this.isSpectator ? "Stay" : "Play Again",
       variant: "primary",
     });
+
     const quitGame = new Button({ text: "Quit Game", variant: "ghost" });
+
+    if (this.isSpectator) {
+      playAgain.onClick(this.onSpectatorStay);
+      quitGame.onClick(this.onSpectatorLeave);
+    } else {
+      playAgain.onClick(this.onPlayAgain);
+      quitGame.onClick(this.onQuitGame);
+    }
 
     btnContainer.append(quitGame.element, playAgain.element);
     return btnContainer;

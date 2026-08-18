@@ -169,6 +169,7 @@ export class Game {
   }
 
   updateBoard(response) {
+    console.log("board updating");
     const board = response.split(":");
     this.currentBoardState = board;
 
@@ -260,7 +261,7 @@ export class Game {
     }
 
     GameStorage.incrementWin(this.props.key, winner);
-    this.props.onGameEnd(winner);
+    this.props.onGameEnd(winner, this);
   }
 
   // POLLING
