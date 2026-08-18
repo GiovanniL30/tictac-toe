@@ -38,7 +38,6 @@ export class WaitingRoom {
     this.polling = setInterval(async () => {
       try {
         const response = await this.props.onCheckRoom();
-        console.log(response);
 
         if (response && response == "true") {
           this.stopPolling();

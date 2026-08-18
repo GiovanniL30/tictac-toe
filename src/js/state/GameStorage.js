@@ -7,32 +7,7 @@ export class GameStorage {
     return `tictactoe-scores-${roomKey}`;
   }
 
-  static getResetKey(roomKey) {
-    return `tictactoe-reset-${roomKey}`;
-  }
-
-  static createReset(roomKey) {
-    const reset = {
-      started: true,
-      timestamp: Date.now(),
-    };
-
-    localStorage.setItem(this.getResetKey(roomKey), JSON.stringify(reset));
-
-    console.log("reset key created");
-    return reset;
-  }
-
-  static getReset(roomKey) {
-    const data = localStorage.getItem(this.getResetKey(roomKey));
-
-    return data ? JSON.parse(data) : null;
-  }
-
-  static clearReset(roomKey) {
-    localStorage.removeItem(this.getResetKey(roomKey));
-  }
-
+  // PLAYERS
   static createPlayers(roomKey, playerName, player) {
     const players = {
       X: null,
@@ -79,10 +54,11 @@ export class GameStorage {
     localStorage.removeItem(this.getPlayersKey(roomKey));
   }
 
-  // -----------------------------
-  // SCORES
-  // -----------------------------
+  static savePlayers(roomKey, players) {
+    localStorage.setItem(this.getPlayersKey(roomKey), JSON.stringify(players));
+  }
 
+  // SCORES
   static createScores(roomKey) {
     const scores = {
       X: 0,
@@ -123,9 +99,5 @@ export class GameStorage {
 
   static removeScores(roomKey) {
     localStorage.removeItem(this.getScoresKey(roomKey));
-  }
-
-  static savePlayers(roomKey, players) {
-    localStorage.setItem(this.getPlayersKey(roomKey), JSON.stringify(players));
   }
 }

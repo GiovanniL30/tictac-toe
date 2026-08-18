@@ -268,15 +268,9 @@ export class Game {
 
     const isDraw = board.every((value) => value === "X" || value === "O");
 
-    console.log(board);
-    console.log(isDraw);
-
     if (isDraw) {
-      console.log("Draw");
       return "DRAW";
     }
-
-    console.log("WInner null");
 
     return null;
   }

@@ -9,12 +9,18 @@ import { WaitingRoom } from "../pages/WaitingRoom.js";
 import { LocalHostApi } from "../services/LocalHostApi.js";
 import { GameState } from "../state/GameState.js";
 import { GameStorage } from "../state/GameStorage.js";
+import { generateCode } from "../utils/index.js";
 
 export class MainPage {
   constructor() {
     this.container = document.querySelector("#app");
     this.api = new LocalHostApi();
     this.gameState = new GameState();
+
+    this.channel = null;
+
+    this.activeModal = null;
+    this.activeGame = null;
 
     this.render();
   }
@@ -43,7 +49,7 @@ export class MainPage {
         return new CreateRoom({
           onBack: () => this.setState(GameState.PAGE_STATES.HOME),
           onRoomCreate: async (playerName) => {
-            const key = this.generateCode();
+            const key = generateCode();
 
             try {
               const response = await this.api.createGame(key);
@@ -52,6 +58,8 @@ export class MainPage {
               this.gameState.playerName = playerName;
 
               GameStorage.createPlayers(key, playerName, response);
+
+              this.openChannel(key);
 
               this.setState(GameState.PAGE_STATES.WAITING_ROOM);
               new Toast("Created a new room.");
@@ -72,6 +80,7 @@ export class MainPage {
 
               if (response != "X" && response != "O") {
                 this.gameState.playerCode = "spectator";
+                this.openChannel(key);
                 this.setState(GameState.PAGE_STATES.GAME_START);
                 new Toast("Game already started, joining as spectator.");
                 return;
@@ -84,6 +93,8 @@ export class MainPage {
               } else {
                 GameStorage.setPlayer(key, playerName, response);
               }
+
+              this.openChannel(key);
 
               this.setState(GameState.PAGE_STATES.GAME_START);
             } catch (e) {
@@ -110,6 +121,7 @@ export class MainPage {
               await this.api.resetGame(this.gameState.key);
             } catch (e) {}
 
+            this.closeChannel();
             this.setState(GameState.PAGE_STATES.HOME);
             new Toast("Game room canceled.");
           },
@@ -129,7 +141,7 @@ export class MainPage {
           },
 
           onGameEnd: (winner, game) => {
-            new ResetGameModal({
+            const modal = new ResetGameModal({
               title: "Game Over!",
               winner,
               player: this.gameState.playerCode,
@@ -137,12 +149,17 @@ export class MainPage {
               key: this.gameState.key,
 
               onPlayAgain: (modal) => this.playAgain(modal, game),
-              onWaitForGame: (modal) => this.waitForNewGame(modal, game),
               onSpectatorLeave: (modal) => this.leaveGame(modal, game),
               onSpectatorStay: (modal) => modal.hide(),
               onQuitGame: (modal) => this.quitGame(modal, game),
-            }).show();
+            });
+
+            this.activeModal = modal;
+            this.activeGame = game;
+
+            modal.show();
           },
+
           onCellClick: async (i) => {
             if (this.gameState.currentTurn !== this.gameState.playerCode) {
               return;
@@ -170,29 +187,12 @@ export class MainPage {
     }
   }
 
-  generateCode(length = 4) {
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let code = "";
-
-    for (let i = 0; i < length; i++) {
-      const index = Math.floor(Math.random() * characters.length);
-      code += characters[index];
-    }
-
-    return code;
-  }
-
   async playAgain(modal, game) {
     const key = this.gameState.key;
-
-    if (this.gameState.playerCode !== "X") {
-      return;
-    }
+    if (this.gameState.playerCode !== "X") return;
 
     try {
       game.destroy();
-
-      GameStorage.createReset(key);
 
       await this.api.resetGame(key);
       const response = await this.api.createGame(key);
@@ -201,57 +201,51 @@ export class MainPage {
         throw new Error(`Expected X but received ${response}`);
       }
 
+      this.channel.postMessage({ type: "restart-ready" });
+
+      this.activeModal = null;
+      this.activeGame = null;
+
       modal.hide();
       this.setState(GameState.PAGE_STATES.GAME_START);
     } catch (e) {
       console.error(e);
-      GameStorage.clearReset(key);
       new Toast("Failed to start a new game." + e);
     }
   }
 
-  waitForNewGame(modal, game) {
+  async handleRestartReady() {
     const key = this.gameState.key;
 
-    const finish = () => {
-      console.log("Joining");
-      this.stopRestartPolling();
-      game.destroy();
+    if (!this.activeModal || !this.activeGame) return;
+
+    try {
+      const response = await this.api.createGame(key);
+      if (response !== "O") return;
+
+      this.activeGame.destroy();
+
       this.gameState.playerCode = "O";
       GameStorage.setPlayer(key, this.gameState.playerName, "O");
-      GameStorage.clearReset(key);
-      modal.hide();
+
+      this.activeModal.hide();
+      this.activeModal = null;
+      this.activeGame = null;
+
       this.setState(GameState.PAGE_STATES.GAME_START);
-    };
-
-    this.restartPolling = setInterval(async () => {
-      const reset = GameStorage.getReset(key);
-
-      console.log(reset);
-      console.log("Attempting to join");
-
-      if (!reset || !reset.started) {
-        console.log("Failed to join. player x no reset");
-        return;
-      }
-
-      try {
-        const response = await this.api.createGame(key);
-        console.log(response);
-        if (response === "O") finish();
-      } catch (e) {}
-    }, 500);
-  }
-
-  stopRestartPolling() {
-    if (this.restartPolling) {
-      clearInterval(this.restartPolling);
-      this.restartPolling = null;
+    } catch (e) {
+      new Toast("Failed to join the new game.");
     }
   }
 
+  // QUIT / LEAVE
   async quitGame(modal, game) {
     try {
+      this.channel.postMessage({
+        type: "quit",
+        player: this.gameState.playerCode,
+      });
+
       await this.api.resetGame(this.gameState.key);
       this.leaveGame(modal, game);
     } catch (e) {
@@ -260,15 +254,65 @@ export class MainPage {
   }
 
   leaveGame(modal, game) {
-    this.stopRestartPolling();
-
     game.destroy();
+
+    this.activeModal = null;
+    this.activeGame = null;
 
     this.gameState.clearSession();
     this.gameState.clearData();
 
+    this.closeChannel();
+
     this.setState(GameState.PAGE_STATES.HOME);
 
     modal.hide();
+  }
+
+  handleOpponentQuit() {
+    if (this.activeGame) {
+      this.activeGame.destroy();
+    }
+
+    if (this.activeModal) {
+      this.activeModal.hide();
+    }
+
+    this.activeModal = null;
+    this.activeGame = null;
+
+    new Toast("The other player left the game.");
+
+    this.gameState.clearSession();
+    this.gameState.clearData();
+
+    this.closeChannel();
+    this.setState(GameState.PAGE_STATES.HOME);
+  }
+
+  // BROADCAST CHANNEL
+  openChannel(key) {
+    this.closeChannel();
+
+    this.channel = new BroadcastChannel(`tictactoe-${key}`);
+
+    this.channel.onmessage = (event) => {
+      const { type, player } = event.data;
+
+      if (type === "quit" && player !== this.gameState.playerCode) {
+        this.handleOpponentQuit();
+      }
+
+      if (type === "restart-ready" && this.gameState.playerCode === "O") {
+        this.handleRestartReady();
+      }
+    };
+  }
+
+  closeChannel() {
+    if (this.channel) {
+      this.channel.close();
+      this.channel = null;
+    }
   }
 }

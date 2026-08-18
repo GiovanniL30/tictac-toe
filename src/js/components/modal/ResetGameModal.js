@@ -10,7 +10,6 @@ export class ResetGameModal extends Modal {
     isSpectator,
     key,
     onPlayAgain,
-    onWaitForGame,
     onSpectatorLeave,
     onSpectatorStay,
     onQuitGame,
@@ -21,7 +20,6 @@ export class ResetGameModal extends Modal {
     this.isSpectator = isSpectator;
 
     this.onPlayAgain = onPlayAgain;
-    this.onWaitForGame = onWaitForGame;
     this.onSpectatorLeave = onSpectatorLeave;
     this.onSpectatorStay = onSpectatorStay;
     this.onQuitGame = onQuitGame;
@@ -54,10 +52,6 @@ export class ResetGameModal extends Modal {
 
     this.generateContent(message, imgSrc);
     this.modalContainer.append(this.generateButtons());
-
-    if (player === "O" && !isSpectator) {
-      this.onWaitForGame(this);
-    }
   }
 
   generateContent(message, imgSrc) {
