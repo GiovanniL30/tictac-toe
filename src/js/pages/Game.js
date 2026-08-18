@@ -1,4 +1,5 @@
 import { GameStorage } from "../state/GameStorage.js";
+import { Mascot } from "../components/Mascot.js";
 
 export class Game {
   constructor(props = {}) {
@@ -158,6 +159,21 @@ export class Game {
     const container = document.createElement("div");
     container.classList.add("turn-indicator");
 
+    const catSlot = document.createElement("div");
+    const dogSlot = document.createElement("div");
+
+    Mascot.mount(catSlot, "cat");
+    Mascot.mount(dogSlot, "dog");
+
+    this.mascotX = catSlot;
+    this.mascotO = dogSlot;
+
+    const text = document.createElement("span");
+    text.classList.add("turn-text");
+    this.playerTurnText = text;
+
+    container.append(catSlot, text, dogSlot);
+
     return container;
   }
 
@@ -170,12 +186,15 @@ export class Game {
 
     // Game is over
     if (this.gameOver) {
+      Mascot.setTurn(this.mascotX, null);
+      Mascot.setTurn(this.mascotO, null);
+
       if (this.lastWinner === "DRAW") {
-        this.playerTurn.textContent = "It's a draw!";
+        this.playerTurnText.textContent = "It's a draw!";
       } else if (this.lastWinner === this.props.player) {
-        this.playerTurn.textContent = "You win!";
+        this.playerTurnText.textContent = "You win!";
       } else {
-        this.playerTurn.textContent = `${playerName} wins!`;
+        this.playerTurnText.textContent = `${playerName} wins!`;
       }
 
       return;
@@ -183,14 +202,20 @@ export class Game {
 
     // Spectator
     if (this.props.player === "spectator") {
-      this.playerTurn.textContent = `${playerName}'s turn`;
+      Mascot.setTurn(this.mascotX, currentTurn === "X" ? "on" : "off");
+      Mascot.setTurn(this.mascotO, currentTurn === "O" ? "on" : "off");
+
+      this.playerTurnText.textContent = `${playerName}'s turn`;
 
       return;
     }
 
     const isMyTurn = currentTurn === this.props.player;
 
-    this.playerTurn.textContent = isMyTurn
+    Mascot.setTurn(this.mascotX, currentTurn === "X" ? "on" : "off");
+    Mascot.setTurn(this.mascotO, currentTurn === "O" ? "on" : "off");
+
+    this.playerTurnText.textContent = isMyTurn
       ? "Your turn"
       : `Waiting for ${playerName}'s move`;
   }
@@ -257,6 +282,7 @@ export class Game {
     const isMyTurn = !this.gameOver && currentTurn === this.props.player;
 
     const cells = this.boardContainer.querySelectorAll(".cell");
+    let lastFilled = null;
 
     cells.forEach((cell, i) => {
       const value = board[i];
@@ -275,6 +301,8 @@ export class Game {
       cell.replaceChildren();
 
       if (!isEmpty) {
+        lastFilled = value;
+
         const chip = document.createElement("span");
         chip.classList.add("chip", value.toLowerCase());
         chip.textContent = value;
@@ -291,6 +319,11 @@ export class Game {
         cell.classList.add("locked");
       }
     });
+
+    if (lastFilled && !this.gameOver) {
+      const host = lastFilled === "X" ? this.mascotX : this.mascotO;
+      Mascot.place(host);
+    }
   }
 
   // GAME LOGIC
@@ -340,6 +373,15 @@ export class Game {
         GameStorage.incrementWin(this.props.key, winner);
       }
     }
+
+    if (winner === "DRAW") {
+      Mascot.setResult(this.mascotX, "stare");
+      Mascot.setResult(this.mascotO, "stare");
+    } else {
+      Mascot.setResult(winner === "X" ? this.mascotX : this.mascotO, "slap");
+      Mascot.setResult(winner === "X" ? this.mascotO : this.mascotX, "cry");
+    }
+
     this.props.onGameEnd(winner, this);
   }
 

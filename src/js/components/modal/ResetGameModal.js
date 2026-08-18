@@ -27,7 +27,8 @@ export class ResetGameModal extends Modal {
     const players = GameStorage.getPlayers(key);
 
     let message;
-    let imgSrc;
+    let imgSrc = null;
+    let drawMascots = false;
 
     if (isSpectator) {
       if (winner === "DRAW") {
@@ -38,17 +39,23 @@ export class ResetGameModal extends Modal {
       }
     } else if (winner === "DRAW") {
       this.modalContainer.classList.add("blue");
-      imgSrc = "/src/assets/icons/draw-face.svg";
+      drawMascots = true;
       message = "It's a Draw!";
-    } else if (winner === player) {
-      this.modalContainer.classList.add("blue");
-      imgSrc = "/src/assets/icons/win-face.svg";
-      message = "You Win!";
     } else {
-      this.modalContainer.classList.add("red");
-      imgSrc = "/src/assets/icons/lose-face.svg";
-      message = "You Lose!";
+      const myMascot = player === "X" ? "cat" : "dog";
+
+      if (winner === player) {
+        this.modalContainer.classList.add("blue");
+        imgSrc = `/src/assets/icons/${myMascot}-mascot.svg`;
+        message = "You Win!";
+      } else {
+        this.modalContainer.classList.add("red");
+        imgSrc = `/src/assets/icons/${myMascot}-mascot-cry.svg`;
+        message = "You Lose!";
+      }
     }
+
+    this.drawMascots = drawMascots;
 
     this.generateContent(message, imgSrc);
     this.modalContainer.append(this.generateButtons());
@@ -68,7 +75,21 @@ export class ResetGameModal extends Modal {
 
     messageContainer.classList.add("game-result");
 
-    if (imgSrc) {
+    if (this.drawMascots) {
+      const mascotsRow = document.createElement("div");
+      mascotsRow.classList.add("draw-mascots");
+
+      const catSticker = document.createElement("img");
+      catSticker.classList.add("sticker");
+      catSticker.src = "/src/assets/icons/cat-mascot.svg";
+
+      const dogSticker = document.createElement("img");
+      dogSticker.classList.add("sticker");
+      dogSticker.src = "/src/assets/icons/dog-mascot.svg";
+
+      mascotsRow.append(catSticker, dogSticker);
+      messageContainer.append(mascotsRow);
+    } else if (imgSrc) {
       const sticker = document.createElement("img");
 
       sticker.classList.add("sticker");

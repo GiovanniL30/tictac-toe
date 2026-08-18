@@ -186,7 +186,11 @@ export class MainPage {
             this.activeModal = modal;
             this.activeGame = game;
 
-            modal.show();
+            setTimeout(() => {
+              if (this.activeModal === modal) {
+                modal.show();
+              }
+            }, 1200);
           },
 
           onCellClick: async (i) => {

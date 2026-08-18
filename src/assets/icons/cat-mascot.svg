@@ -1,0 +1,47 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- CAT MASCOT (Player X - pink) -->
+  <g id="body">
+    <!-- ears -->
+    <path d="M48,64 L60,10 L94,38 Z" fill="#FF5C8A" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M106,38 L140,10 L152,64 Z" fill="#FF5C8A" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M63,34 L65,25 L77,33 Z" fill="#FFD1DC"/>
+    <path d="M123,33 L135,25 L137,34 Z" fill="#FFD1DC"/>
+
+    <!-- body -->
+    <path d="M100,22 C135,18 168,40 176,72 C184,104 176,142 148,164 C120,186 82,188 54,168 C26,148 14,112 22,78 C30,44 65,26 100,22 Z"
+          fill="#FF5C8A" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+
+    <!-- blush -->
+    <ellipse cx="60" cy="128" rx="12" ry="8" fill="#E81E5B" opacity="0.35"/>
+    <ellipse cx="140" cy="128" rx="12" ry="8" fill="#E81E5B" opacity="0.35"/>
+
+    <!-- eyes -->
+    <circle cx="70" cy="100" r="10" fill="#17181A"/>
+    <circle cx="73" cy="96" r="3.5" fill="#FFFFFF"/>
+    <circle cx="130" cy="100" r="10" fill="#17181A"/>
+    <circle cx="127" cy="96" r="3.5" fill="#FFFFFF"/>
+
+    <!-- whiskers -->
+    <path d="M50,118 L26,112" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M50,130 L26,130" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M50,142 L26,148" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M150,118 L174,112" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M150,130 L174,130" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M150,142 L174,148" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- nose + mouth -->
+    <path d="M92,122 L108,122 L100,130 Z" fill="#17181A"/>
+    <path d="M86,134 Q94,142 100,134 Q106,142 114,134" fill="none" stroke="#17181A" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <!-- arm + held tile -->
+  <g id="arm">
+    <path d="M150,100 C164,106 174,118 178,132" fill="none" stroke="#17181A" stroke-width="26" stroke-linecap="round"/>
+    <path d="M150,100 C164,106 174,118 178,132" fill="none" stroke="#FF5C8A" stroke-width="18" stroke-linecap="round"/>
+
+    <path d="M184,112 C193,110 199,117 199,126 C199,135 193,142 184,142 C175,142 169,135 169,126 C169,117 175,114 184,112 Z"
+          fill="#FF5C8A" stroke="#17181A" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M181,116 L183,121 L188,122 L183,123 L181,128 L179,123 L174,122 L179,121 Z" fill="#FFFFFF" opacity="0.8"/>
+    <circle cx="180" cy="142" r="12" fill="#FF5C8A" stroke="#17181A" stroke-width="6"/>
+  </g>
+</svg>

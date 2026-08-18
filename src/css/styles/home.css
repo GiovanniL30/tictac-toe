@@ -18,6 +18,29 @@
   gap: 2px;
 }
 
+.hero-mascots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 2vw, 16px);
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-mascots .mascot {
+  width: clamp(64px, 18vw, 100px);
+  height: clamp(64px, 18vw, 100px);
+}
+
+.hero-mascots .mascot.cat svg {
+  transform: rotate(-3deg);
+}
+
+.hero-mascots .mascot.dog svg {
+  transform: scaleX(-1) rotate(3deg);
+}
+
 .hero-sticker {
   background: var(--pink);
   border: 5px solid var(--ink);

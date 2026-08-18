@@ -1,0 +1,50 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- DOG MASCOT (Player O - blue) -->
+  <g id="body">
+    <!-- floppy ears -->
+    <path d="M46,54 C28,66 24,100 40,124 C48,136 62,130 62,112 C62,94 60,70 54,52 Z"
+          fill="#3AA6FF" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M154,54 C172,66 176,100 160,124 C152,136 138,130 138,112 C138,94 140,70 146,52 Z"
+          fill="#3AA6FF" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+
+    <!-- body -->
+    <path d="M100,22 C135,18 168,40 176,72 C184,104 176,142 148,164 C120,186 82,188 54,168 C26,148 14,112 22,78 C30,44 65,26 100,22 Z"
+          fill="#3AA6FF" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+
+    <!-- muzzle -->
+    <ellipse cx="100" cy="134" rx="32" ry="24" fill="#FFF3DE" stroke="#17181A" stroke-width="6"/>
+
+    <!-- nose -->
+    <ellipse cx="100" cy="123" rx="11" ry="8" fill="#17181A"/>
+    <ellipse cx="96" cy="120" rx="2.5" ry="2" fill="#FFFFFF" opacity="0.7"/>
+
+    <!-- mouth -->
+    <path d="M100,131 L100,141" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M85,140 Q94,147 100,141" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M115,140 Q106,147 100,141" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- tongue -->
+    <path d="M93,142 Q93,162 100,162 Q107,162 107,142 Z" fill="#FF5C8A" stroke="#17181A" stroke-width="5" stroke-linejoin="round"/>
+
+    <!-- blush -->
+    <ellipse cx="62" cy="138" rx="11" ry="8" fill="#FF5C8A" opacity="0.45"/>
+    <ellipse cx="138" cy="138" rx="11" ry="8" fill="#FF5C8A" opacity="0.45"/>
+
+    <!-- eyes -->
+    <circle cx="70" cy="100" r="10" fill="#17181A"/>
+    <circle cx="73" cy="96" r="3.5" fill="#FFFFFF"/>
+    <circle cx="130" cy="100" r="10" fill="#17181A"/>
+    <circle cx="127" cy="96" r="3.5" fill="#FFFFFF"/>
+  </g>
+
+  <!-- arm + held tile -->
+  <g id="arm">
+    <path d="M150,100 C164,106 174,118 178,132" fill="none" stroke="#17181A" stroke-width="26" stroke-linecap="round"/>
+    <path d="M150,100 C164,106 174,118 178,132" fill="none" stroke="#3AA6FF" stroke-width="18" stroke-linecap="round"/>
+
+    <path d="M184,112 C193,110 199,117 199,126 C199,135 193,142 184,142 C175,142 169,135 169,126 C169,117 175,114 184,112 Z"
+          fill="#3AA6FF" stroke="#17181A" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M181,116 L183,121 L188,122 L183,123 L181,128 L179,123 L174,122 L179,121 Z" fill="#FFFFFF" opacity="0.8"/>
+    <circle cx="180" cy="142" r="12" fill="#3AA6FF" stroke="#17181A" stroke-width="6"/>
+  </g>
+</svg>

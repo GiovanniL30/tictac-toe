@@ -1,0 +1,46 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- DOG MASCOT - SUPER CRYING (Player O - blue) -->
+  <g id="body">
+    <!-- floppy ears -->
+    <path d="M46,54 C28,66 24,100 40,124 C48,136 62,130 62,112 C62,94 60,70 54,52 Z"
+          fill="#3AA6FF" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M154,54 C172,66 176,100 160,124 C152,136 138,130 138,112 C138,94 140,70 146,52 Z"
+          fill="#3AA6FF" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+
+    <!-- body -->
+    <path d="M100,22 C135,18 168,40 176,72 C184,104 176,142 148,164 C120,186 82,188 54,168 C26,148 14,112 22,78 C30,44 65,26 100,22 Z"
+          fill="#3AA6FF" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+
+    <!-- muzzle -->
+    <ellipse cx="100" cy="134" rx="32" ry="24" fill="#FFF3DE" stroke="#17181A" stroke-width="6"/>
+
+    <!-- scrunched wailing eyebrows -->
+    <path d="M46,76 L86,94" fill="none" stroke="#17181A" stroke-width="8" stroke-linecap="round"/>
+    <path d="M154,76 L114,94" fill="none" stroke="#17181A" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- squeezed shut crying eyes -->
+    <path d="M56,104 Q68,116 80,104" fill="none" stroke="#17181A" stroke-width="9" stroke-linecap="round"/>
+    <path d="M120,104 Q132,116 144,104" fill="none" stroke="#17181A" stroke-width="9" stroke-linecap="round"/>
+
+    <!-- gushing tears -->
+    <path d="M60,110 Q64,132 60,142 Q56,132 60,110 Z" fill="#8FD8FF" stroke="#17181A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M69,118 Q73,140 69,148 Q65,140 69,118 Z" fill="#8FD8FF" stroke="#17181A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M53,116 Q55,126 53,131 Q51,126 53,116 Z" fill="#8FD8FF" stroke="#17181A" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M43,110 Q45,118 43,122 Q41,118 43,110 Z" fill="#8FD8FF" stroke="#17181A" stroke-width="2" stroke-linejoin="round"/>
+
+    <path d="M140,110 Q144,132 140,142 Q136,132 140,110 Z" fill="#8FD8FF" stroke="#17181A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M131,118 Q135,140 131,148 Q127,140 131,118 Z" fill="#8FD8FF" stroke="#17181A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M147,116 Q149,126 147,131 Q145,126 147,116 Z" fill="#8FD8FF" stroke="#17181A" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M157,110 Q159,118 157,122 Q155,118 157,110 Z" fill="#8FD8FF" stroke="#17181A" stroke-width="2" stroke-linejoin="round"/>
+
+    <!-- nose + snot bubble -->
+    <ellipse cx="100" cy="123" rx="11" ry="8" fill="#17181A"/>
+    <ellipse cx="96" cy="120" rx="2.5" ry="2" fill="#FFFFFF" opacity="0.7"/>
+    <circle cx="100" cy="112" r="9" fill="#AEE3FF" stroke="#17181A" stroke-width="3"/>
+    <ellipse cx="96" cy="109" rx="3" ry="2" fill="#FFFFFF" opacity="0.8"/>
+
+    <!-- huge wailing mouth -->
+    <path d="M84,132 Q100,164 116,132 Q100,150 84,132 Z" fill="#17181A"/>
+    <path d="M94,146 Q100,160 106,146 Z" fill="#FF5C8A"/>
+  </g>
+</svg>

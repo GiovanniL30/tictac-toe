@@ -1,0 +1,201 @@
+/* =========================================================
+   MASCOTS
+   ========================================================= */
+.mascot {
+  width: clamp(40px, 9vw, 76px);
+  height: clamp(40px, 9vw, 76px);
+  flex-shrink: 0;
+  animation: mascot-bounce 2.4s ease-in-out infinite;
+}
+
+.mascot svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* dog faces the board from the right side -> mirror it */
+.mascot.dog svg {
+  transform: scaleX(-1);
+}
+
+.mascot svg #arm,
+.mascot svg #body {
+  transform-box: view-box;
+  transition:
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s ease;
+}
+
+.mascot svg #arm {
+  opacity: 0;
+  transform-origin: 152px 104px;
+}
+
+.mascot svg #body {
+  transform-origin: 100px 186px;
+}
+
+/* arms stay hidden and only pop out while placing a tile
+   the dog's svg is mirrored (scaleX(-1)), so the same arm rotation
+   automatically points it toward the board on its side. */
+.mascot.placing svg #arm {
+  opacity: 1;
+  transform: rotate(-30deg);
+}
+
+.mascot.cat.placing svg #body {
+  transform: rotate(7deg) translateX(10px);
+}
+
+.mascot.dog.placing svg #body {
+  transform: rotate(-7deg) translateX(-10px);
+}
+
+/* turn indicator states: the active player's mascot pops,
+   the other one dims and stops bouncing */
+.mascot.on-turn {
+  opacity: 1;
+}
+
+.mascot.off-turn {
+  opacity: 0.45;
+  animation: none;
+  transform: translateY(0);
+}
+
+/* GAME OVER: winner slaps the loser, loser recoils and cries,
+   draw -> both stare at each other */
+.mascot.slap svg #arm {
+  opacity: 1;
+  transform: rotate(-60deg);
+}
+
+.mascot.cat.slap {
+  animation: slap-right 0.8s ease;
+}
+
+.mascot.dog.slap {
+  animation: slap-left 0.8s ease;
+}
+
+.mascot.cry svg #body {
+  transform: rotate(-6deg) translateY(6px);
+}
+
+.mascot.cat.cry {
+  animation: cry-left 0.7s ease 0.4s forwards;
+}
+
+.mascot.dog.cry {
+  animation: cry-right 0.7s ease 0.4s forwards;
+}
+
+.mascot.stare svg #body {
+  transform: rotate(-2deg);
+}
+
+.mascot.cat.stare {
+  animation: stare-right 2.2s ease-in-out infinite;
+}
+
+.mascot.dog.stare {
+  animation: stare-left 2.2s ease-in-out infinite;
+}
+
+@keyframes mascot-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes slap-right {
+  0% {
+    transform: translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-6px) rotate(-8deg);
+  }
+  45% {
+    transform: translateX(18px) rotate(10deg);
+  }
+  65% {
+    transform: translateX(8px) rotate(4deg);
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+}
+
+@keyframes slap-left {
+  0% {
+    transform: translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateX(6px) rotate(8deg);
+  }
+  45% {
+    transform: translateX(-18px) rotate(-10deg);
+  }
+  65% {
+    transform: translateX(-8px) rotate(-4deg);
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+}
+
+@keyframes cry-left {
+  0% {
+    transform: translateX(0) rotate(0deg);
+  }
+  30% {
+    transform: translateX(-16px) rotate(-8deg);
+  }
+  60% {
+    transform: translateX(-12px) rotate(-5deg);
+  }
+  100% {
+    transform: translateX(-12px) rotate(-5deg);
+  }
+}
+
+@keyframes cry-right {
+  0% {
+    transform: translateX(0) rotate(0deg);
+  }
+  30% {
+    transform: translateX(16px) rotate(8deg);
+  }
+  60% {
+    transform: translateX(12px) rotate(5deg);
+  }
+  100% {
+    transform: translateX(12px) rotate(5deg);
+  }
+}
+
+@keyframes stare-right {
+  0%,
+  100% {
+    transform: translateX(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateX(5px) rotate(-3deg);
+  }
+}
+
+@keyframes stare-left {
+  0%,
+  100% {
+    transform: translateX(0) rotate(3deg);
+  }
+  50% {
+    transform: translateX(-5px) rotate(3deg);
+  }
+}

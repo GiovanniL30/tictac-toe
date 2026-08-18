@@ -1,4 +1,5 @@
 import { Button } from "../components/Button.js";
+import { Mascot } from "../components/Mascot.js";
 
 export class Home {
   constructor(props = {}) {
@@ -51,6 +52,17 @@ export class Home {
     const headerContainer = document.createElement("div");
     headerContainer.classList.add("header-container");
 
+    const mascotRow = document.createElement("div");
+    mascotRow.classList.add("hero-mascots");
+
+    const catSlot = document.createElement("div");
+    const dogSlot = document.createElement("div");
+
+    Mascot.mount(catSlot, "cat");
+    Mascot.mount(dogSlot, "dog");
+
+    mascotRow.append(catSlot, dogSlot);
+
     const tictactoeContainer = document.createElement("div");
     tictactoeContainer.classList.add("hero-sticker");
 
@@ -63,12 +75,13 @@ export class Home {
       titleH1.append(span);
     }
 
+    tictactoeContainer.append(titleH1);
+
     const tagline = document.createElement("p");
     tagline.textContent = "grab a friend, share a code, play";
     tagline.classList.add("tagline");
 
-    tictactoeContainer.append(titleH1);
-    headerContainer.append(tictactoeContainer, tagline);
+    headerContainer.append(mascotRow, tictactoeContainer, tagline);
 
     return headerContainer;
   }
