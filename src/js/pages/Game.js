@@ -25,14 +25,31 @@ export class Game {
     const playerTurn = this.generatePlayerTurn();
     const scoreboard = this.generateScoreBoard();
     const gameBoard = this.generateBoard();
+    const roomKey = this.generateGameKeyTag();
 
     this.playerTurn = playerTurn;
     this.scoreboard = scoreboard;
 
-    container.append(scoreboard, playerTurn, gameBoard);
+    container.append(roomKey, scoreboard, playerTurn, gameBoard);
 
     this.startStorageListener();
     this.startPolling();
+
+    return container;
+  }
+
+  // GAME KEY
+  generateGameKeyTag() {
+    const container = document.createElement("div");
+    container.classList.add("room-tag");
+
+    const dot = document.createElement("div");
+    dot.classList.add("dot");
+
+    const p = document.createElement("p");
+    p.textContent = "Room " + this.props.key;
+
+    container.append(dot, p);
 
     return container;
   }
@@ -169,7 +186,6 @@ export class Game {
   }
 
   updateBoard(response) {
-    console.log("board updating");
     const board = response.split(":");
     this.currentBoardState = board;
 

@@ -10,14 +10,18 @@ export class ResetGameModal extends Modal {
     isSpectator,
     key,
     onPlayAgain,
+    onWaitForGame,
     onSpectatorLeave,
     onSpectatorStay,
     onQuitGame,
   }) {
     super({ title });
 
+    this.player = player;
     this.isSpectator = isSpectator;
+
     this.onPlayAgain = onPlayAgain;
+    this.onWaitForGame = onWaitForGame;
     this.onSpectatorLeave = onSpectatorLeave;
     this.onSpectatorStay = onSpectatorStay;
     this.onQuitGame = onQuitGame;
@@ -27,11 +31,17 @@ export class ResetGameModal extends Modal {
     let message;
     let imgSrc;
 
-    if (winner === "DRAW") {
+    if (isSpectator) {
+      if (winner === "DRAW") {
+        message = "It's a Draw!";
+      } else {
+        const winnerName = players[winner] ?? `Player ${winner}`;
+        message = `${winnerName} Wins!`;
+      }
+    } else if (winner === "DRAW") {
+      this.modalContainer.classList.add("blue");
+      imgSrc = "/src/assets/icons/draw-face.svg";
       message = "It's a Draw!";
-    } else if (isSpectator) {
-      const winnerName = players[winner] ?? `Player ${winner}`;
-      message = `${winnerName} Wins!`;
     } else if (winner === player) {
       this.modalContainer.classList.add("blue");
       imgSrc = "/src/assets/icons/win-face.svg";
@@ -42,44 +52,105 @@ export class ResetGameModal extends Modal {
       message = "You Lose!";
     }
 
-    const p = document.createElement("p");
-    p.textContent = message;
+    this.generateContent(message, imgSrc);
+    this.modalContainer.append(this.generateButtons());
 
-    if (isSpectator) {
+    if (player === "O" && !isSpectator) {
+      this.onWaitForGame(this);
+    }
+  }
+
+  generateContent(message, imgSrc) {
+    if (this.isSpectator) {
+      const p = document.createElement("p");
+      p.textContent = message;
+
       this.modalContainer.append(p);
-    } else {
-      const messageContainer = document.createElement("div");
+
+      return;
+    }
+
+    const messageContainer = document.createElement("div");
+
+    messageContainer.classList.add("game-result");
+
+    if (imgSrc) {
       const sticker = document.createElement("img");
+
       sticker.classList.add("sticker");
       sticker.src = imgSrc;
 
-      messageContainer.append(sticker, p);
-      this.modalContainer.append(messageContainer);
+      messageContainer.append(sticker);
     }
 
-    this.modalContainer.append(this.generateButtons());
+    const p = document.createElement("p");
+    p.textContent = message;
+
+    messageContainer.append(p);
+
+    // O gets the waiting message
+    if (this.player === "O") {
+      const waitingMessage = document.createElement("p");
+      waitingMessage.classList.add("waiting-message");
+      waitingMessage.textContent = "Waiting for Player X to start a new game.";
+      messageContainer.append(waitingMessage);
+    }
+
+    this.modalContainer.append(messageContainer);
   }
 
   generateButtons() {
     const btnContainer = document.createElement("div");
+
     btnContainer.classList.add("btn-row");
 
-    const playAgain = new Button({
-      text: this.isSpectator ? "Stay" : "Play Again",
+    // SPECTATOR
+    if (this.isSpectator) {
+      const stayButton = new Button({
+        text: "Stay",
+        variant: "primary",
+      });
+
+      const quitButton = new Button({
+        text: "Quit Game",
+        variant: "ghost",
+      });
+
+      stayButton.onClick(() => this.onSpectatorStay(this));
+      quitButton.onClick(() => this.onSpectatorLeave(this));
+      btnContainer.append(quitButton.element, stayButton.element);
+
+      return btnContainer;
+    }
+
+    // PLAYER O
+    if (this.player === "O") {
+      const quitButton = new Button({
+        text: "Quit Game",
+        variant: "ghost",
+      });
+
+      quitButton.onClick(() => this.onQuitGame(this));
+      btnContainer.append(quitButton.element);
+
+      return btnContainer;
+    }
+
+    // PLAYER X
+    const playAgainButton = new Button({
+      text: "Play Again",
       variant: "primary",
     });
 
-    const quitGame = new Button({ text: "Quit Game", variant: "ghost" });
+    const quitButton = new Button({
+      text: "Quit Game",
+      variant: "ghost",
+    });
 
-    if (this.isSpectator) {
-      playAgain.onClick(this.onSpectatorStay);
-      quitGame.onClick(this.onSpectatorLeave);
-    } else {
-      playAgain.onClick(this.onPlayAgain);
-      quitGame.onClick(this.onQuitGame);
-    }
+    playAgainButton.onClick(() => this.onPlayAgain(this));
+    quitButton.onClick(() => this.onQuitGame(this));
+    btnContainer.append(quitButton.element, playAgainButton.element);
 
-    btnContainer.append(quitGame.element, playAgain.element);
     return btnContainer;
   }
 }

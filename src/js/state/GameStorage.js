@@ -7,6 +7,32 @@ export class GameStorage {
     return `tictactoe-scores-${roomKey}`;
   }
 
+  static getResetKey(roomKey) {
+    return `tictactoe-reset-${roomKey}`;
+  }
+
+  static createReset(roomKey) {
+    const reset = {
+      started: true,
+      timestamp: Date.now(),
+    };
+
+    localStorage.setItem(this.getResetKey(roomKey), JSON.stringify(reset));
+
+    console.log("reset key created");
+    return reset;
+  }
+
+  static getReset(roomKey) {
+    const data = localStorage.getItem(this.getResetKey(roomKey));
+
+    return data ? JSON.parse(data) : null;
+  }
+
+  static clearReset(roomKey) {
+    localStorage.removeItem(this.getResetKey(roomKey));
+  }
+
   static createPlayers(roomKey, playerName, player) {
     const players = {
       X: null,

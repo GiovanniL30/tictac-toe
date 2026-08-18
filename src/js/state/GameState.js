@@ -10,7 +10,7 @@ export class GameState {
 
   constructor() {
     this.key = null;
-    this.currentPlayer = null;
+    this.playerCode = null;
     this.playerName = null;
     this.spectatorCount = 0;
     this.pageState = GameState.PAGE_STATES.HOME;
@@ -21,7 +21,7 @@ export class GameState {
       "tictactoe-session",
       JSON.stringify({
         key: this.key,
-        player: this.currentPlayer,
+        player: this.playerCode,
         playerName: this.playerName,
       }),
     );
@@ -37,7 +37,7 @@ export class GameState {
     const data = JSON.parse(session);
 
     this.key = data.key;
-    this.currentPlayer = data.player;
+    this.playerCode = data.player;
     this.playerName = data.playerName;
 
     return true;
@@ -47,12 +47,12 @@ export class GameState {
     sessionStorage.removeItem("tictactoe-session");
 
     this.key = null;
-    this.currentPlayer = null;
+    this.playerCode = null;
   }
 
   clearData() {
     this.key = null;
-    this.currentPlayer = null;
+    this.playerCode = null;
     this.playerName = null;
     this.spectatorCount = 0;
     this.pageState = GameState.PAGE_STATES.HOME;

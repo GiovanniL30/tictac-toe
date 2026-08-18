@@ -32,12 +32,6 @@ export class MainPage {
   }
 
   createPage() {
-    // const session = this.gameState.restoreSession();
-
-    // if (session) {
-    //   this.setState(GameState.PAGE_STATES.JOIN_ROOM);
-    // }
-
     switch (this.gameState.pageState) {
       case GameState.PAGE_STATES.HOME:
         return new Home({
@@ -54,10 +48,9 @@ export class MainPage {
             try {
               const response = await this.api.createGame(key);
               this.gameState.key = key;
-              this.gameState.currentPlayer = response;
+              this.gameState.playerCode = response;
               this.gameState.playerName = playerName;
 
-              this.gameState.saveSession();
               GameStorage.createPlayers(key, playerName, response);
 
               this.setState(GameState.PAGE_STATES.WAITING_ROOM);
@@ -77,14 +70,20 @@ export class MainPage {
               this.gameState.key = key;
               this.gameState.playerName = playerName;
 
-              if (response == "X" || response == "O") {
-                this.gameState.currentPlayer = response;
-              } else {
-                this.gameState.currentPlayer = "spectator";
+              if (response != "X" && response != "O") {
+                this.gameState.playerCode = "spectator";
+                this.setState(GameState.PAGE_STATES.GAME_START);
+                new Toast("Game already started, joining as spectator.");
+                return;
               }
 
-              this.gameState.saveSession();
-              GameStorage.setPlayer(key, playerName, response);
+              this.gameState.playerCode = response;
+
+              if (response == "X") {
+                GameStorage.createPlayers(key, playerName, response);
+              } else {
+                GameStorage.setPlayer(key, playerName, response);
+              }
 
               this.setState(GameState.PAGE_STATES.GAME_START);
             } catch (e) {
@@ -119,7 +118,7 @@ export class MainPage {
       case GameState.PAGE_STATES.GAME_START:
         return new Game({
           key: this.gameState.key,
-          player: this.gameState.currentPlayer,
+          player: this.gameState.playerCode,
 
           onCheckBoard: () => {
             return this.api.checkBoardStatus(this.gameState.key);
@@ -130,23 +129,22 @@ export class MainPage {
           },
 
           onGameEnd: (winner, game) => {
-            const modal = new ResetGameModal({
+            new ResetGameModal({
               title: "Game Over!",
               winner,
-              player: this.gameState.currentPlayer,
-              isSpectator: this.gameState.currentPlayer === "spectator",
+              player: this.gameState.playerCode,
+              isSpectator: this.gameState.playerCode === "spectator",
               key: this.gameState.key,
 
-              onPlayAgain: () => this.playAgain(modal, game),
-              onSpectatorLeave: () => this.leaveGame(modal, game),
-              onSpectatorStay: () => modal.hide(),
-              onQuitGame: () => this.quitGame(modal, game),
-            });
-
-            modal.show();
+              onPlayAgain: (modal) => this.playAgain(modal, game),
+              onWaitForGame: (modal) => this.waitForNewGame(modal, game),
+              onSpectatorLeave: (modal) => this.leaveGame(modal, game),
+              onSpectatorStay: (modal) => modal.hide(),
+              onQuitGame: (modal) => this.quitGame(modal, game),
+            }).show();
           },
           onCellClick: async (i) => {
-            if (this.gameState.currentTurn !== this.gameState.currentPlayer) {
+            if (this.gameState.currentTurn !== this.gameState.playerCode) {
               return;
             }
 
@@ -156,7 +154,7 @@ export class MainPage {
             try {
               await this.api.addMove({
                 key: this.gameState.key,
-                tile: this.gameState.currentPlayer,
+                tile: this.gameState.playerCode,
                 x,
                 y,
               });
@@ -185,13 +183,70 @@ export class MainPage {
   }
 
   async playAgain(modal, game) {
+    const key = this.gameState.key;
+
+    if (this.gameState.playerCode !== "X") {
+      return;
+    }
+
     try {
-      await this.api.resetGame(this.gameState.key);
       game.destroy();
+
+      GameStorage.createReset(key);
+
+      await this.api.resetGame(key);
+      const response = await this.api.createGame(key);
+
+      if (response !== "X") {
+        throw new Error(`Expected X but received ${response}`);
+      }
+
       modal.hide();
       this.setState(GameState.PAGE_STATES.GAME_START);
     } catch (e) {
-      new Toast("Failed to reset game." + e);
+      console.error(e);
+      GameStorage.clearReset(key);
+      new Toast("Failed to start a new game." + e);
+    }
+  }
+
+  waitForNewGame(modal, game) {
+    const key = this.gameState.key;
+
+    const finish = () => {
+      console.log("Joining");
+      this.stopRestartPolling();
+      game.destroy();
+      this.gameState.playerCode = "O";
+      GameStorage.setPlayer(key, this.gameState.playerName, "O");
+      GameStorage.clearReset(key);
+      modal.hide();
+      this.setState(GameState.PAGE_STATES.GAME_START);
+    };
+
+    this.restartPolling = setInterval(async () => {
+      const reset = GameStorage.getReset(key);
+
+      console.log(reset);
+      console.log("Attempting to join");
+
+      if (!reset || !reset.started) {
+        console.log("Failed to join. player x no reset");
+        return;
+      }
+
+      try {
+        const response = await this.api.createGame(key);
+        console.log(response);
+        if (response === "O") finish();
+      } catch (e) {}
+    }, 500);
+  }
+
+  stopRestartPolling() {
+    if (this.restartPolling) {
+      clearInterval(this.restartPolling);
+      this.restartPolling = null;
     }
   }
 
@@ -205,11 +260,15 @@ export class MainPage {
   }
 
   leaveGame(modal, game) {
+    this.stopRestartPolling();
+
     game.destroy();
+
     this.gameState.clearSession();
     this.gameState.clearData();
+
     this.setState(GameState.PAGE_STATES.HOME);
+
     modal.hide();
-    cleanUpCallback();
   }
 }
