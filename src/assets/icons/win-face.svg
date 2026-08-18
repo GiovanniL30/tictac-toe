@@ -1,0 +1,23 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- decorative sparkles -->
+  <path d="M172 30 L176 42 L188 46 L176 50 L172 62 L168 50 L156 46 L168 42 Z" fill="#FF5C8A" stroke="#17181A" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M26 150 L29 159 L38 162 L29 165 L26 174 L23 165 L14 162 L23 159 Z" fill="#3AA6FF" stroke="#17181A" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="30" cy="40" r="7" fill="#6FCF6F" stroke="#17181A" stroke-width="3"/>
+
+  <!-- blob face -->
+  <path d="M100,22 C135,18 168,40 176,72 C184,104 176,142 148,164 C120,186 82,188 54,168
+           C26,148 14,112 22,78 C30,44 65,26 100,22 Z"
+        fill="#FFCE45" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- blush cheeks -->
+  <ellipse cx="58" cy="118" rx="15" ry="10" fill="#FF5C8A" opacity="0.55"/>
+  <ellipse cx="142" cy="118" rx="15" ry="10" fill="#FF5C8A" opacity="0.55"/>
+
+  <!-- happy eyes (curved, closed with joy) -->
+  <path d="M58,92 Q72,74 86,92" fill="none" stroke="#17181A" stroke-width="9" stroke-linecap="round"/>
+  <path d="M114,92 Q128,74 142,92" fill="none" stroke="#17181A" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- big open smile -->
+  <path d="M60,116 Q100,168 140,116 Q100,148 60,116 Z" fill="#17181A"/>
+  <path d="M74,132 Q100,148 126,132" fill="none" stroke="#FF5C8A" stroke-width="8" stroke-linecap="round"/>
+</svg>

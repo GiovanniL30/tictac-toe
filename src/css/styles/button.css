@@ -64,6 +64,11 @@
   width: 100%;
 }
 
+.btn.white {
+  color: #fff;
+  border-color: #fff;
+}
+
 .link-btn {
   background: none;
   border: none;

@@ -1,0 +1,26 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- decorative rain-ish accents -->
+  <path d="M28 32 C24 40 24 48 30 52 C36 48 36 40 28 32 Z" fill="#3AA6FF" stroke="#17181A" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="174" cy="46" r="6" fill="#C9A6FF" stroke="#17181A" stroke-width="3"/>
+  <circle cx="182" cy="150" r="5" fill="#3AA6FF" stroke="#17181A" stroke-width="3"/>
+
+  <!-- blob face -->
+  <path d="M100,22 C135,18 168,40 176,72 C184,104 176,142 148,164 C120,186 82,188 54,168
+           C26,148 14,112 22,78 C30,44 65,26 100,22 Z"
+        fill="#C9A6FF" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- sad angled eyebrows -->
+  <path d="M52,80 L82,92" fill="none" stroke="#17181A" stroke-width="9" stroke-linecap="round"/>
+  <path d="M148,80 L118,92" fill="none" stroke="#17181A" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- droopy eyes -->
+  <path d="M58,104 Q67,112 76,104" fill="none" stroke="#17181A" stroke-width="9" stroke-linecap="round"/>
+  <path d="M124,104 Q133,112 142,104" fill="none" stroke="#17181A" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- teardrop -->
+  <path d="M132,116 C132,128 122,134 122,144 C122,151 127,156 133,156 C139,156 144,151 144,144 C144,134 132,128 132,116 Z"
+        fill="#3AA6FF" stroke="#17181A" stroke-width="5" stroke-linejoin="round"/>
+
+  <!-- frown -->
+  <path d="M62,148 Q100,120 138,148" fill="none" stroke="#17181A" stroke-width="10" stroke-linecap="round"/>
+</svg>

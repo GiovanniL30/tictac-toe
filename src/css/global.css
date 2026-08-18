@@ -6,6 +6,7 @@
   --yellow: #ffce45; /* CTA / highlight accent */
   --green: #6fcf6f; /* win-line / success */
   --lilac: #c9a6ff; /* decorative / spectator accent */
+  --red: #ef5350; /* lose / danger */
 
   --shadow-lg: 8px 8px 0 var(--ink);
   --shadow-md: 5px 5px 0 var(--ink);

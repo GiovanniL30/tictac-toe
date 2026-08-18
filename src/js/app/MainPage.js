@@ -1,3 +1,5 @@
+import { Modal } from "../components/modal/Modal.js";
+import { ResetGameModal } from "../components/modal/ResetGameModal.js";
 import { Toast } from "../components/Toast.js";
 import { CreateRoom } from "../pages/CreateRoom.js";
 import { Game } from "../pages/Game.js";
@@ -127,6 +129,16 @@ export class MainPage {
             this.gameState.currentTurn = currentTurn;
           },
 
+          onGameEnd: (winner) => {
+            new ResetGameModal({
+              title: "Game Over!",
+              winner,
+              player: this.gameState.currentPlayer,
+              isSpectator: this.gameState.currentPlayer == "spectator",
+              key: this.gameState.key,
+            }).show();
+          },
+
           onCellClick: async (i) => {
             if (this.gameState.currentTurn !== this.gameState.currentPlayer) {
               return;
@@ -165,4 +177,8 @@ export class MainPage {
 
     return code;
   }
+
+  playAgain() {}
+
+  quitGame() {}
 }

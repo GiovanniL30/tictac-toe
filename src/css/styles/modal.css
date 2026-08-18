@@ -24,7 +24,7 @@
   border-radius: 32px 14px 32px 14px;
   box-shadow: var(--shadow-lg);
   padding: 30px 24px;
-  max-width: 360px;
+  max-width: 500px;
   width: 100%;
   text-align: center;
   transform: rotate(-1.5deg) scale(0.9);
@@ -45,6 +45,11 @@
   color: #fff;
 }
 
+.modal.red {
+  background: var(--red);
+  color: #fff;
+}
+
 .modal h2 {
   font-size: clamp(1.4rem, 7vw, 1.9rem);
   text-transform: uppercase;
@@ -55,6 +60,10 @@
 .modal p {
   font-weight: 600;
   margin: 0 0 20px;
+}
+
+.sticker {
+  width: 100px;
 }
 
 footer {

@@ -255,20 +255,12 @@ export class Game {
     this.gameOver = true;
     this.lastWinner = winner;
 
-    if (winner === "DRAW") {
-      this.props.onDraw?.();
-      return;
+    if (winner !== "DRAW") {
+      this.refreshScoreBoard();
     }
 
-    if (winner === this.props.player) {
-      GameStorage.incrementWin(this.props.key, winner);
-
-      this.props.onWin?.(winner);
-    } else {
-      this.props.onLoss?.(winner);
-    }
-
-    this.refreshScoreBoard();
+    GameStorage.incrementWin(this.props.key, winner);
+    this.props.onGameEnd(winner);
   }
 
   // POLLING
