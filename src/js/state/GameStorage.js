@@ -100,4 +100,65 @@ export class GameStorage {
   static removeScores(roomKey) {
     localStorage.removeItem(this.getScoresKey(roomKey));
   }
+
+  // SPECTATORS
+  static getSpectatorsKey(roomKey) {
+    return `tictactoe-spectators-${roomKey}`;
+  }
+
+  static getSpectators(roomKey) {
+    const data = localStorage.getItem(this.getSpectatorsKey(roomKey));
+
+    if (!data) {
+      return [];
+    }
+
+    return JSON.parse(data);
+  }
+
+  static saveSpectators(roomKey, spectators) {
+    localStorage.setItem(
+      this.getSpectatorsKey(roomKey),
+      JSON.stringify(spectators),
+    );
+  }
+
+  static touchSpectator(roomKey, spectatorId, playerName) {
+    const spectators = this.getSpectators(roomKey);
+    const existing = spectators.find((s) => s.id === spectatorId);
+
+    if (existing) {
+      existing.lastSeen = Date.now();
+    } else {
+      spectators.push({
+        id: spectatorId,
+        name: playerName ?? "Spectator",
+        lastSeen: Date.now(),
+      });
+    }
+
+    this.saveSpectators(roomKey, spectators);
+
+    return spectators;
+  }
+
+  static removeSpectator(roomKey, spectatorId) {
+    this.saveSpectators(
+      roomKey,
+      this.getSpectators(roomKey).filter((s) => s.id !== spectatorId),
+    );
+  }
+
+  static countSpectators(roomKey, maxAgeMs = 3000) {
+    const now = Date.now();
+    const spectators = this.getSpectators(roomKey).filter(
+      (s) => now - s.lastSeen < maxAgeMs,
+    );
+
+    if (spectators.length !== this.getSpectators(roomKey).length) {
+      this.saveSpectators(roomKey, spectators);
+    }
+
+    return spectators.length;
+  }
 }

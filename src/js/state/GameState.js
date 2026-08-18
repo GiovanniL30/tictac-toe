@@ -13,6 +13,7 @@ export class GameState {
     this.playerCode = null;
     this.playerName = null;
     this.spectatorCount = 0;
+    this.spectatorId = null;
     this.pageState = GameState.PAGE_STATES.HOME;
   }
 
@@ -55,6 +56,7 @@ export class GameState {
     this.playerCode = null;
     this.playerName = null;
     this.spectatorCount = 0;
+    this.spectatorId = null;
     this.pageState = GameState.PAGE_STATES.HOME;
   }
 }

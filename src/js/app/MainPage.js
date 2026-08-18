@@ -80,6 +80,12 @@ export class MainPage {
 
               if (response != "X" && response != "O") {
                 this.gameState.playerCode = "spectator";
+                this.gameState.spectatorId = crypto.randomUUID();
+                GameStorage.touchSpectator(
+                  key,
+                  this.gameState.spectatorId,
+                  playerName,
+                );
                 this.openChannel(key);
                 this.setState(GameState.PAGE_STATES.GAME_START);
                 new Toast("Game already started, joining as spectator.");
@@ -131,6 +137,7 @@ export class MainPage {
         return new Game({
           key: this.gameState.key,
           player: this.gameState.playerCode,
+          spectatorId: this.gameState.spectatorId,
 
           onCheckBoard: () => {
             return this.api.checkBoardStatus(this.gameState.key);

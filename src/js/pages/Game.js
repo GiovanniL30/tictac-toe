@@ -12,6 +12,7 @@ export class Game {
     this.playerTurn = null;
     this.scoreboard = null;
     this.boardContainer = null;
+    this.spectatorsElement = null;
 
     this.gameOver = false;
     this.lastWinner = null;
@@ -25,11 +26,12 @@ export class Game {
     const scoreboard = this.generateScoreBoard();
     const gameBoard = this.generateBoard();
     const roomKey = this.generateGameKeyTag();
+    const spectators = this.generateSpectatorsBadge();
 
     this.playerTurn = playerTurn;
     this.scoreboard = scoreboard;
 
-    container.append(roomKey, scoreboard, playerTurn, gameBoard);
+    container.append(roomKey, scoreboard, playerTurn, gameBoard, spectators);
 
     if (this.props.player === "spectator") {
       const spectator = this.generateSpectatorBanner();
@@ -116,6 +118,37 @@ export class Game {
     this.scoreboard.replaceWith(newScoreboard);
 
     this.scoreboard = newScoreboard;
+  }
+
+  // SPECTATORS
+  generateSpectatorsBadge() {
+    const container = document.createElement("div");
+    container.classList.add("spectators");
+
+    const dot = document.createElement("div");
+    dot.classList.add("dot");
+
+    const p = document.createElement("p");
+    p.textContent = "0 spectating";
+
+    container.append(dot, p);
+
+    this.spectatorsElement = container;
+
+    return container;
+  }
+
+  updateSpectatorCount() {
+    if (!this.spectatorsElement) {
+      return;
+    }
+
+    if (this.props.player === "spectator" && this.props.spectatorId) {
+      GameStorage.touchSpectator(this.props.key, this.props.spectatorId);
+    }
+
+    const count = GameStorage.countSpectators(this.props.key);
+    this.spectatorsElement.querySelector("p").textContent = `${count} spectating`;
   }
 
   //PLAYER TURN
@@ -329,6 +362,7 @@ export class Game {
       const response = await this.props.onCheckBoard();
 
       this.updateBoard(response);
+      this.updateSpectatorCount();
     } catch (error) {
       console.error("Failed to synchronize board:", error);
     }
@@ -361,5 +395,9 @@ export class Game {
   destroy() {
     this.stopPolling();
     this.stopStorageListener();
+
+    if (this.props.player === "spectator" && this.props.spectatorId) {
+      GameStorage.removeSpectator(this.props.key, this.props.spectatorId);
+    }
   }
 }
