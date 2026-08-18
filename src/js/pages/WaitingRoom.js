@@ -82,15 +82,6 @@ export class WaitingRoom {
     return taglines;
   }
 
-  createBackButton() {
-    const backBtn = document.createElement("button");
-    backBtn.textContent = "← back";
-    backBtn.classList.add("sm", "link-btn");
-    backBtn.addEventListener("click", () => this.props.onBack());
-
-    return backBtn;
-  }
-
   createCodePlate() {
     const codeContainer = document.createElement("div");
     codeContainer.classList.add("code-plate");
