@@ -73,7 +73,7 @@ export class JoinRoom {
       e.preventDefault();
 
       const name = nameField.getInputValue().trim();
-      const roomCode = roomCodeField.getInputValue().trim();
+      const roomCode = roomCodeField.getInputValue().trim().toUpperCase();
 
       if (name.length < 3) {
         errorMessage.textContent =
