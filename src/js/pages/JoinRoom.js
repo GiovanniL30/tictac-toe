@@ -2,6 +2,8 @@ import { BackButton } from "../components/BackButton.js";
 import { Button } from "../components/Button.js";
 import { Input } from "../components/Input.js";
 import { InputField } from "../components/InputField.js";
+import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
+import { Toast } from "../components/Toast.js";
 
 export class JoinRoom {
   constructor(props = {}) {
@@ -20,8 +22,18 @@ export class JoinRoom {
   }
 
   createForm() {
-    const errorMessage = document.createElement("div");
-    errorMessage.classList.add("error-msg");
+    const nameError = this.createErrorMsg();
+    const codeError = this.createErrorMsg();
+
+    const showError = (el, message) => {
+      el.textContent = message;
+      el.classList.add("show");
+    };
+
+    const clearError = (el) => {
+      el.textContent = "";
+      el.classList.remove("show");
+    };
 
     const form = document.createElement("form");
     form.classList.add("card");
@@ -34,8 +46,7 @@ export class JoinRoom {
 
     nameField.onInputChange(() => {
       if (nameField.getInputValue().length >= 3) {
-        errorMessage.textContent = "";
-        errorMessage.classList.remove("show");
+        clearError(nameError);
       }
     });
 
@@ -49,8 +60,7 @@ export class JoinRoom {
 
     roomCodeField.onInputChange(() => {
       if (roomCodeField.getInputValue().length === 4) {
-        errorMessage.textContent = "";
-        errorMessage.classList.remove("show");
+        clearError(codeError);
       }
     });
 
@@ -64,34 +74,50 @@ export class JoinRoom {
 
     form.append(
       nameField.element,
+      nameError,
       roomCodeField.element,
-      errorMessage,
+      codeError,
       joinRoomBtn.element,
     );
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const name = nameField.getInputValue().trim();
       const roomCode = roomCodeField.getInputValue().trim().toUpperCase();
 
+      clearError(nameError);
+      clearError(codeError);
+
       if (name.length < 3) {
-        errorMessage.textContent =
-          "Player Name should be at least 3 characters";
-        errorMessage.classList.add("show");
+        showError(nameError, "Player Name should be at least 3 characters");
         return;
       }
 
       if (roomCode.length !== 4) {
-        errorMessage.textContent = "Room Code should be exactly 4 characters";
-        errorMessage.classList.add("show");
+        showError(codeError, "Room Code should be exactly 4 characters");
         return;
       }
 
-      errorMessage.classList.remove("show");
-      this.props.onJoin(roomCode, name);
+      try {
+        await this.props.onJoin(roomCode, name);
+      } catch (error) {
+        if (error instanceof RoomNotFoundError) {
+          const message = "Room not found. Please check the room code.";
+          showError(codeError, message);
+          new Toast(message);
+        } else {
+          new Toast("Failed to join the room.");
+        }
+      }
     });
 
     return form;
+  }
+
+  createErrorMsg() {
+    const errorMessage = document.createElement("div");
+    errorMessage.classList.add("error-msg");
+    return errorMessage;
   }
 }

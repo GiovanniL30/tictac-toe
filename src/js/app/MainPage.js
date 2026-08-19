@@ -10,6 +10,7 @@ import { LocalHostApi } from "../services/LocalHostApi.js";
 import { GameState } from "../state/GameState.js";
 import { GameStorage } from "../state/GameStorage.js";
 import { generateCode } from "../utils/index.js";
+import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
 
 export class MainPage {
   constructor() {
@@ -77,41 +78,38 @@ export class MainPage {
         return new JoinRoom({
           onBack: () => this.setState(GameState.PAGE_STATES.HOME),
           onJoin: async (key, playerName) => {
-            try {
-              const response = await this.api.createGame(key);
-              this.gameState.key = key;
-              this.gameState.playerName = playerName;
+            const response = await this.api.createGame(key);
 
-              if (response != "X" && response != "O") {
-                this.gameState.playerCode = "spectator";
-                this.gameState.spectatorId = crypto.randomUUID();
-                GameStorage.touchSpectator(
-                  key,
-                  this.gameState.spectatorId,
-                  playerName,
-                );
-                this.openChannel(key);
-                this.registerPageExit();
-                this.setState(GameState.PAGE_STATES.GAME_START);
-                new Toast("Game already started, joining as spectator.");
-                return;
-              }
+            if (response === "X") {
+              await this.api.resetGame(key).catch(() => {});
+              throw new RoomNotFoundError();
+            }
 
-              this.gameState.playerCode = response;
+            this.gameState.key = key;
+            this.gameState.playerName = playerName;
 
-              if (response == "X") {
-                GameStorage.createPlayers(key, playerName, response);
-              } else {
-                GameStorage.setPlayer(key, playerName, response);
-              }
-
+            if (response != "O") {
+              this.gameState.playerCode = "spectator";
+              this.gameState.spectatorId = crypto.randomUUID();
+              GameStorage.touchSpectator(
+                key,
+                this.gameState.spectatorId,
+                playerName,
+              );
               this.openChannel(key);
               this.registerPageExit();
-
               this.setState(GameState.PAGE_STATES.GAME_START);
-            } catch (e) {
-              new Toast("Failed to join the room.");
+              new Toast("Game already started, joining as spectator.");
+              return;
             }
+
+            this.gameState.playerCode = response;
+            GameStorage.setPlayer(key, playerName, response);
+
+            this.openChannel(key);
+            this.registerPageExit();
+
+            this.setState(GameState.PAGE_STATES.GAME_START);
           },
         });
 
@@ -350,11 +348,16 @@ export class MainPage {
         return;
       }
 
-      if (this.gameState.playerCode !== "X" && this.gameState.playerCode !== "O") {
+      if (
+        this.gameState.playerCode !== "X" &&
+        this.gameState.playerCode !== "O"
+      ) {
         return;
       }
 
-      this.api.resetGame(this.gameState.key, { keepalive: true }).catch(() => {});
+      this.api
+        .resetGame(this.gameState.key, { keepalive: true })
+        .catch(() => {});
       GameStorage.removeRoom(this.gameState.key);
     };
 

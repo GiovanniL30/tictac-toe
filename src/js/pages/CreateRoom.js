@@ -21,6 +21,16 @@ export class CreateRoom {
     const errorMessage = document.createElement("div");
     errorMessage.classList.add("error-msg");
 
+    const showError = (message) => {
+      errorMessage.textContent = message;
+      errorMessage.classList.add("show");
+    };
+
+    const clearError = () => {
+      errorMessage.textContent = "";
+      errorMessage.classList.remove("show");
+    };
+
     const form = document.createElement("form");
     form.classList.add("card");
 
@@ -32,8 +42,7 @@ export class CreateRoom {
 
     nameField.onInputChange(() => {
       if (nameField.getInputValue().length >= 3) {
-        errorMessage.textContent = "";
-        errorMessage.classList.remove("show");
+        clearError();
       }
     });
 
@@ -51,16 +60,12 @@ export class CreateRoom {
       e.preventDefault();
 
       const name = nameField.getInputValue().trim();
+      clearError();
 
       if (name.length < 3) {
-        errorMessage.textContent =
-          "Player Name should be at least 3 characters";
-
-        errorMessage.classList.add("show");
+        showError("Player Name should be at least 3 characters");
         return;
       }
-
-      errorMessage.classList.remove("show");
 
       this.props.onRoomCreate(name);
     });
