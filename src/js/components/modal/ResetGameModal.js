@@ -1,4 +1,5 @@
 import { GameStorage } from "../../state/GameStorage.js";
+import { createLoadingDots } from "../../utils/index.js";
 import { Button } from "../Button.js";
 import { Modal } from "./Modal.js";
 
@@ -97,10 +98,17 @@ export class ResetGameModal extends Modal {
 
     // O gets the waiting message
     if (this.player === "O") {
+      const waitingContainer = document.createElement("div");
+      waitingContainer.classList.add("waiting-container");
+
+      const loadingDots = createLoadingDots();
+
       const waitingMessage = document.createElement("p");
       waitingMessage.classList.add("waiting-message");
       waitingMessage.textContent = "Waiting for Player X to start a new game.";
-      messageContainer.append(waitingMessage);
+
+      waitingContainer.append(loadingDots, waitingMessage);
+      messageContainer.append(waitingContainer);
     }
 
     this.modalContainer.append(messageContainer);
@@ -115,7 +123,7 @@ export class ResetGameModal extends Modal {
     if (this.isSpectator) {
       const stayButton = new Button({
         text: "Stay",
-        variant: "primary",
+        variant: "secondary",
       });
 
       const quitButton = new Button({

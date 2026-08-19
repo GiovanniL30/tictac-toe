@@ -9,3 +9,15 @@ export const generateCode = (length = 4) => {
 
   return code;
 };
+
+export const createLoadingDots = () => {
+  const loadingDots = document.createElement("div");
+  loadingDots.classList.add("waiting-dots");
+
+  for (let i = 0; i < 3; i++) {
+    const span = document.createElement("span");
+    loadingDots.append(span);
+  }
+
+  return loadingDots;
+};

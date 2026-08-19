@@ -1,5 +1,7 @@
 import { GameStorage } from "../state/GameStorage.js";
 import { Mascot } from "../components/Mascot.js";
+import { Button } from "../components/Button.js";
+import { BackButton } from "../components/BackButton.js";
 
 export class Game {
   constructor(props = {}) {
@@ -31,12 +33,23 @@ export class Game {
     const roomKey = this.generateGameKeyTag();
     const spectators = this.generateSpectatorsBadge();
 
+    const quitGame = new BackButton(
+      this.props.onQuit,
+      this.props.player === "spectator" ? "Stop Spectating" : "Quit Game",
+    );
+
     this.playerTurn = playerTurn;
     this.scoreboard = scoreboard;
 
     const topbar = this.generateTopbar(roomKey, spectators);
 
-    container.append(topbar, scoreboard, playerTurn, gameBoard);
+    container.append(
+      topbar,
+      scoreboard,
+      playerTurn,
+      gameBoard,
+      quitGame.element,
+    );
 
     if (this.props.player === "spectator") {
       const spectator = this.generateSpectatorBanner();
@@ -431,7 +444,7 @@ export class Game {
           this.quitting = true;
           this.stopPolling();
           this.stopStorageListener();
-          this.props.onOpponentQuit?.();
+          this.props.onOpponentQuit();
         }
       }
     } catch (error) {

@@ -1,6 +1,7 @@
 import { BackButton } from "../components/BackButton.js";
 import { Button } from "../components/Button.js";
 import { Toast } from "../components/Toast.js";
+import { createLoadingDots } from "../utils/index.js";
 
 export class WaitingRoom {
   constructor(props = {}) {
@@ -16,7 +17,7 @@ export class WaitingRoom {
     const codePlate = this.createCodePlate();
 
     const taglines = this.createTagLines();
-    const loadingDots = this.createLoadingDots();
+    const loadingDots = createLoadingDots();
     const backButton = new BackButton(() => this.props.onBack(), "cancel room");
 
     content.append(
@@ -54,18 +55,6 @@ export class WaitingRoom {
       clearInterval(this.polling);
       this.polling = null;
     }
-  }
-
-  createLoadingDots() {
-    const loadingDots = document.createElement("div");
-    loadingDots.classList.add("waiting-dots");
-
-    for (let i = 0; i < 3; i++) {
-      const span = document.createElement("span");
-      loadingDots.append(span);
-    }
-
-    return loadingDots;
   }
 
   createTagLines() {

@@ -11,6 +11,7 @@ import { GameState } from "../state/GameState.js";
 import { GameStorage } from "../state/GameStorage.js";
 import { generateCode } from "../utils/index.js";
 import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
+import { ConfirmationModal } from "../components/modal/ConfirmationModal.js";
 
 export class MainPage {
   constructor() {
@@ -163,6 +164,30 @@ export class MainPage {
             this.handleOpponentQuit();
           },
 
+          onQuit: () => {
+            const isSpectator = this.gameState.playerCode === "spectator";
+
+            const modal = new ConfirmationModal({
+              title: isSpectator
+                ? "Stop spectating?"
+                : "Are you sure you want to quit?",
+
+              message: isSpectator
+                ? "You will stop watching the game and return to the home screen."
+                : "Quitting the game will end it for all players and return everyone to the home screen.",
+
+              confirmText: isSpectator ? "Stop Spectating" : "Quit Game",
+              cancelText: "Cancel",
+              onConfirm: (modal) =>
+                isSpectator
+                  ? this.leaveGame(modal, game)
+                  : this.quitGame(modal, game),
+              onCancel: (modal) => modal.hide(),
+            });
+
+            modal.show();
+          },
+
           onTurnChange: (currentTurn) => {
             this.gameState.currentTurn = currentTurn;
           },
@@ -295,7 +320,10 @@ export class MainPage {
     this.activeGame = null;
 
     this.leaving = true;
-    GameStorage.removeRoom(this.gameState.key);
+
+    if (this.gameState.playerCode == "X" || this.gameState.playerCode == "O") {
+      GameStorage.removeRoom(this.gameState.key);
+    }
 
     this.gameState.clearSession();
     this.gameState.clearData();
