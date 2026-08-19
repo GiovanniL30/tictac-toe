@@ -266,3 +266,22 @@ footer {
   font-size: 1.1rem;
   flex-shrink: 0;
 }
+
+.server-down-modal {
+  background: #fff;
+  max-width: 340px;
+}
+
+.modal-badge.warn {
+  position: static;
+  margin: 0 auto 10px;
+  background: var(--red);
+  color: #fff;
+  transform: none;
+}
+
+.server-down-modal p {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 18px;
+}

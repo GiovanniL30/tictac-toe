@@ -12,6 +12,7 @@ import { GameStorage } from "../state/GameStorage.js";
 import { generateCode } from "../utils/index.js";
 import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
 import { ConfirmationModal } from "../components/modal/ConfirmationModal.js";
+import { ServerDownModal } from "../components/modal/ServerDownModal.js";
 
 export class MainPage {
   constructor() {
@@ -27,6 +28,9 @@ export class MainPage {
     this.leaving = false;
     this.pageExitHandler = null;
 
+    this.serverStatusPolling = null;
+
+    this.startServerStatusPolling();
     this.render();
   }
 
@@ -425,5 +429,63 @@ export class MainPage {
       this.channel.close();
       this.channel = null;
     }
+  }
+
+  startServerStatusPolling() {
+    this.serverStatusPolling = setInterval(async () => {
+      try {
+        await this.api.checkGameStatus("1234");
+      } catch (e) {
+        console.error("Server is down:", e);
+        this.stopServerStatusPolling();
+        this.handleServerDown();
+      }
+    }, 500);
+  }
+
+  stopServerStatusPolling() {
+    if (this.serverStatusPolling) {
+      clearInterval(this.serverStatusPolling);
+      this.serverStatusPolling = null;
+    }
+  }
+
+  handleServerDown() {
+    if (this.leaving) return;
+
+    if (this.activeModal) {
+      this.activeModal.hide();
+      this.activeModal = null;
+    }
+
+    if (this.activeGame) {
+      this.activeGame.destroy();
+      this.activeGame = null;
+    }
+
+    this.leaving = true;
+
+    if (this.gameState.key) {
+      GameStorage.removeRoom(this.gameState.key);
+    }
+
+    this.gameState.clearSession();
+    this.gameState.clearData();
+
+    this.deregisterPageExit();
+    this.closeChannel();
+
+    this.setState(GameState.PAGE_STATES.HOME);
+
+    const modal = new ServerDownModal({
+      onDismiss: (modal) => {
+        modal.hide();
+        this.leaving = false;
+        this.startServerStatusPolling();
+      },
+    });
+
+    this.activeModal = modal;
+    modal.show();
   }
 }

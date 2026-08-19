@@ -1,7 +1,7 @@
 import { Input } from "./Input.js";
 
 export class InputField {
-  constructor({ label, id, placeholder = "", isCode = false, maxLength = 10 }) {
+  constructor({ label, id, placeholder = "", isCode = false, maxLength = 7 }) {
     this.element = document.createElement("div");
     this.element.classList.add("field");
 
