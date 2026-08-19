@@ -13,6 +13,17 @@
   gap: 10px;
 }
 
+.player-note {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
 .create-room-container form,
 .join-room-container form,
 .game-room-container > div {

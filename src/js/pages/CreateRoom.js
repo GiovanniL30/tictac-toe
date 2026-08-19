@@ -10,6 +10,7 @@ export class CreateRoom {
   render() {
     const container = document.createElement("div");
     container.classList.add("create-room-container");
+
     const form = this.createForm();
     const backButton = new BackButton(() => this.props.onBack());
 
@@ -53,7 +54,13 @@ export class CreateRoom {
     });
 
     createRoomBtn.addClass("block");
-    form.append(nameField.element, errorMessage, createRoomBtn.element);
+
+    form.append(
+      this.createPlayerNote(),
+      nameField.element,
+      errorMessage,
+      createRoomBtn.element,
+    );
 
     //submit form handler
     form.addEventListener("submit", (e) => {
@@ -71,5 +78,20 @@ export class CreateRoom {
     });
 
     return form;
+  }
+
+  createPlayerNote() {
+    const playerNote = document.createElement("div");
+    playerNote.classList.add("player-note");
+
+    const playerChip = document.createElement("span");
+    playerChip.classList.add("chip", "x", "mini");
+    playerChip.textContent = "X";
+
+    const playerNoteText = document.createElement("span");
+    playerNoteText.textContent = "You'll be Player 1 (X)";
+
+    playerNote.append(playerChip, playerNoteText);
+    return playerNote;
   }
 }

@@ -24,3 +24,11 @@
 .chip.ghost {
   background: var(--lilac);
 }
+
+.chip.mini {
+  width: 26px;
+  height: 26px;
+  border-width: 3px;
+  font-size: 0.8rem;
+  border-radius: 8px;
+}
