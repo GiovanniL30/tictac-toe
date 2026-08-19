@@ -83,4 +83,6 @@
 
 .how-btn {
   margin-top: 25px;
+  width: fit-content;
+  margin-inline: auto;
 }
