@@ -1,5 +1,6 @@
 import { Button } from "../components/Button.js";
 import { Mascot } from "../components/Mascot.js";
+import { HowToPlayModal } from "../components/modal/HowToPlayModal.js";
 
 export class Home {
   constructor(props = {}) {
@@ -15,8 +16,9 @@ export class Home {
 
     const header = this.createHeader();
     const buttons = this.createActionButtons();
+    const howToPlayBtn = this.createHowToPlayButton();
 
-    contents.append(header, buttons);
+    contents.append(header, buttons, howToPlayBtn);
     container.append(contents);
 
     return container;
@@ -46,6 +48,18 @@ export class Home {
     btnContainers.append(createRoomBtn.element, joinRoomBtn.element);
 
     return btnContainers;
+  }
+
+  createHowToPlayButton() {
+    const btn = document.createElement("button");
+    btn.textContent = "How to play?";
+    btn.classList.add("sm", "link-btn", "how-btn");
+
+    btn.addEventListener("click", () => {
+      new HowToPlayModal().show();
+    });
+
+    return btn;
   }
 
   createHeader() {
