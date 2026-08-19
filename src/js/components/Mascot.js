@@ -1,18 +1,18 @@
 const svgCache = new Map();
 
-function svgKey(type, emotion) {
+const svgKey = (type, emotion) => {
   const suffix = emotion === "cry" ? "-cry" : "";
   return `./src/assets/icons/${type}-mascot${suffix}.svg`;
-}
+};
 
-async function loadSvg(key) {
+const loadSvg = async (key) => {
   if (!svgCache.has(key)) {
     const response = await fetch(key);
     svgCache.set(key, await response.text());
   }
 
   return svgCache.get(key);
-}
+};
 
 export class Mascot {
   static async mount(host, type, emotion = "smile") {

@@ -162,7 +162,8 @@ export class Game {
     }
 
     const count = GameStorage.countSpectators(this.props.key);
-    this.spectatorsElement.querySelector("p").textContent = `${count} spectating`;
+    this.spectatorsElement.querySelector("p").textContent =
+      `${count} spectating`;
   }
 
   //PLAYER TURN
@@ -380,7 +381,7 @@ export class Game {
     if (winner !== "DRAW") {
       this.refreshScoreBoard();
 
-      if (this.props.player === winner) {
+      if (this.props.player === "X") {
         GameStorage.incrementWin(this.props.key, winner);
       }
     }
