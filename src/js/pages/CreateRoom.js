@@ -2,6 +2,7 @@ import { BackButton } from "../components/BackButton.js";
 import { Button } from "../components/Button.js";
 import { Input } from "../components/Input.js";
 import { InputField } from "../components/InputField.js";
+import { createPlayerNote } from "../utils/index.js";
 
 export class CreateRoom {
   constructor(props = {}) {
@@ -56,7 +57,7 @@ export class CreateRoom {
     createRoomBtn.addClass("block");
 
     form.append(
-      this.createPlayerNote(),
+      createPlayerNote("X", "1"),
       nameField.element,
       errorMessage,
       createRoomBtn.element,
@@ -78,20 +79,5 @@ export class CreateRoom {
     });
 
     return form;
-  }
-
-  createPlayerNote() {
-    const playerNote = document.createElement("div");
-    playerNote.classList.add("player-note");
-
-    const playerChip = document.createElement("span");
-    playerChip.classList.add("chip", "x", "mini");
-    playerChip.textContent = "X";
-
-    const playerNoteText = document.createElement("span");
-    playerNoteText.textContent = "You'll be Player 1 (X)";
-
-    playerNote.append(playerChip, playerNoteText);
-    return playerNote;
   }
 }

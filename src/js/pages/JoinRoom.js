@@ -4,6 +4,7 @@ import { Input } from "../components/Input.js";
 import { InputField } from "../components/InputField.js";
 import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
 import { Toast } from "../components/Toast.js";
+import { createPlayerNote } from "../utils/index.js";
 
 export class JoinRoom {
   constructor(props = {}) {
@@ -73,6 +74,7 @@ export class JoinRoom {
     joinRoomBtn.addClass("block");
 
     form.append(
+      createPlayerNote("O", "2"),
       nameField.element,
       nameError,
       roomCodeField.element,
