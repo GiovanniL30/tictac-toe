@@ -21,6 +21,7 @@ export class Game {
     this.lastWinner = null;
     this.gameStarted = false;
     this.quitting = false;
+    this.moveInFlight = false;
   }
 
   render() {
@@ -245,6 +246,34 @@ export class Game {
       : `Waiting for ${playerName}'s move`;
   }
 
+  // MOVE PENDING LOCK
+  lockBoard() {
+    this.boardContainer.classList.add("locked");
+
+    this.boardContainer.querySelectorAll(".cell").forEach((cell) => {
+      cell.classList.add("no-click");
+    });
+  }
+
+  unlockBoard() {
+    this.boardContainer.classList.remove("locked");
+
+    const board = this.currentBoardState ?? [];
+    const isMyTurn =
+      !this.gameOver && this.getCurrentTurn(board) === this.props.player;
+
+    this.boardContainer.querySelectorAll(".cell").forEach((cell) => {
+      const value = cell.dataset.value;
+      const isEmpty = value !== "X" && value !== "O";
+
+      if (isEmpty && isMyTurn) {
+        cell.classList.remove("no-click");
+      } else {
+        cell.classList.add("no-click");
+      }
+    });
+  }
+
   // BOARD
   generateBoard() {
     const boardWrapper = document.createElement("div");
@@ -268,11 +297,19 @@ export class Game {
       cell.dataset.i = i;
 
       cell.addEventListener("click", () => {
-        if (cell.classList.contains("no-click")) {
+        if (this.moveInFlight || cell.classList.contains("no-click")) {
           return;
         }
 
-        this.props.onCellClick(i);
+        this.moveInFlight = true;
+        this.lockBoard();
+
+        this.props.onCellClick(i).then((ok) => {
+          if (!ok) {
+            this.moveInFlight = false;
+            this.unlockBoard();
+          }
+        });
       });
 
       boardContainer.append(cell);
@@ -291,6 +328,10 @@ export class Game {
 
     this.props.onTurnChange(currentTurn);
 
+    if (this.moveInFlight && !this.gameOver && currentTurn !== this.props.player) {
+      this.moveInFlight = false;
+    }
+
     const winner = this.getWinner(board);
 
     if (winner && !this.gameOver) {
@@ -304,7 +345,15 @@ export class Game {
 
     this.updatePlayerTurn(currentTurn);
 
-    const isMyTurn = !this.gameOver && currentTurn === this.props.player;
+    const isMyTurn =
+      !this.gameOver &&
+      !this.moveInFlight &&
+      currentTurn === this.props.player;
+
+    this.boardContainer.classList.toggle(
+      "locked",
+      this.moveInFlight || this.props.player === "spectator",
+    );
 
     const cells = this.boardContainer.querySelectorAll(".cell");
     let lastFilled = null;

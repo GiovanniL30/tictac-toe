@@ -276,7 +276,7 @@ export class MainPage {
 
           onCellClick: async (i) => {
             if (this.gameState.currentTurn !== this.gameState.playerCode) {
-              return;
+              return false;
             }
 
             const x = i % 3;
@@ -289,9 +289,12 @@ export class MainPage {
                 x,
                 y,
               });
+
+              return true;
             } catch (e) {
               console.error(e);
               new Toast("Failed to make move.");
+              return false;
             }
           },
         });

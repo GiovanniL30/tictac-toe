@@ -228,11 +228,6 @@
   overflow: hidden;
 }
 
-.board.locked {
-  filter: saturate(0.4);
-  opacity: 90%;
-}
-
 .cell {
   position: relative;
   display: flex;
