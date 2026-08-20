@@ -102,6 +102,9 @@ export class JoinRoom {
       }
 
       try {
+        joinRoomBtn.disabled = true;
+        joinRoomBtn.text = "Joining Room...";
+
         await this.props.onJoin(roomCode, name);
       } catch (error) {
         if (error instanceof RoomNotFoundError) {
@@ -111,6 +114,9 @@ export class JoinRoom {
         } else {
           new Toast("Failed to join the room.");
         }
+      } finally {
+        joinRoomBtn.disabled = false;
+        joinRoomBtn.text = "Join Room";
       }
     });
 

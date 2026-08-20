@@ -64,7 +64,7 @@ export class CreateRoom {
     );
 
     //submit form handler
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const name = nameField.getInputValue().trim();
@@ -75,7 +75,11 @@ export class CreateRoom {
         return;
       }
 
-      this.props.onRoomCreate(name);
+      createRoomBtn.disabled = true;
+      createRoomBtn.text = "Creating Room...";
+      await this.props.onRoomCreate(name);
+      createRoomBtn.disabled = false;
+      createRoomBtn.text = "Create Room";
     });
 
     return form;
