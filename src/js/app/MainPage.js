@@ -14,6 +14,8 @@ import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
 import { ConfirmationModal } from "../components/modal/ConfirmationModal.js";
 import { ServerDownModal } from "../components/modal/ServerDownModal.js";
 
+const OPPONENT_GRACE_MS = 2000;
+
 export class MainPage {
   constructor() {
     this.container = document.querySelector("#app");
@@ -27,11 +29,53 @@ export class MainPage {
 
     this.leaving = false;
     this.pageExitHandler = null;
+    this.pageshowHandler = null;
+    this.opponentGraceTimer = null;
 
     this.serverStatusPolling = null;
 
     this.startServerStatusPolling();
     this.render();
+    this.handleReloadRestore();
+  }
+
+  async handleReloadRestore() {
+    const nav = performance.getEntriesByType?.("navigation")?.[0];
+    const isReload =
+      nav?.type === "reload" || performance.navigation?.type === 1;
+
+    if (!isReload) return;
+
+    if (!this.gameState.restoreSession()) return;
+
+    if (
+      this.gameState.playerCode !== "X" &&
+      this.gameState.playerCode !== "O"
+    ) {
+      this.gameState.clearSession();
+      return;
+    }
+
+    try {
+      const status = await this.api.checkGameStatus(this.gameState.key);
+
+      if (status !== "true") {
+        this.gameState.clearSession();
+        return;
+      }
+
+      this.openChannel(this.gameState.key);
+      this.registerPageExit();
+
+      this.channel.postMessage({
+        type: "back",
+        player: this.gameState.playerCode,
+      });
+
+      this.setState(GameState.PAGE_STATES.GAME_START);
+    } catch (e) {
+      this.gameState.clearSession();
+    }
   }
 
   setState(pageState) {
@@ -65,6 +109,7 @@ export class MainPage {
               this.gameState.key = key;
               this.gameState.playerCode = response;
               this.gameState.playerName = playerName;
+              this.gameState.saveSession();
 
               GameStorage.createPlayers(key, playerName, response);
 
@@ -110,6 +155,7 @@ export class MainPage {
 
             this.gameState.playerCode = response;
             GameStorage.setPlayer(key, playerName, response);
+            this.gameState.saveSession();
 
             this.openChannel(key);
             this.registerPageExit();
@@ -138,6 +184,7 @@ export class MainPage {
 
             this.leaving = true;
             GameStorage.removeRoom(this.gameState.key);
+            this.gameState.clearSession();
             this.deregisterPageExit();
             this.closeChannel();
             this.setState(GameState.PAGE_STATES.HOME);
@@ -320,6 +367,8 @@ export class MainPage {
   leaveGame(modal, game) {
     game.destroy();
 
+    this.clearOpponentGrace();
+
     this.activeModal = null;
     this.activeGame = null;
 
@@ -340,7 +389,7 @@ export class MainPage {
     modal.hide();
   }
 
-  handleOpponentQuit() {
+  async handleOpponentQuit() {
     if (this.activeGame) {
       this.activeGame.destroy();
     }
@@ -349,10 +398,17 @@ export class MainPage {
       this.activeModal.hide();
     }
 
+    this.clearOpponentGrace();
+
     this.activeModal = null;
     this.activeGame = null;
 
     this.leaving = true;
+
+    try {
+      await this.api.resetGame(this.gameState.key);
+    } catch (e) {}
+
     GameStorage.removeRoom(this.gameState.key);
 
     new Toast("The other player left the game.");
@@ -363,6 +419,23 @@ export class MainPage {
     this.deregisterPageExit();
     this.closeChannel();
     this.setState(GameState.PAGE_STATES.HOME);
+  }
+
+  // OPPONENT GRACE PERIOD (lets a refresh survive without ending the game)
+  startOpponentGrace() {
+    this.clearOpponentGrace();
+
+    this.opponentGraceTimer = setTimeout(() => {
+      this.opponentGraceTimer = null;
+      this.handleOpponentQuit();
+    }, OPPONENT_GRACE_MS);
+  }
+
+  clearOpponentGrace() {
+    if (this.opponentGraceTimer) {
+      clearTimeout(this.opponentGraceTimer);
+      this.opponentGraceTimer = null;
+    }
   }
 
   // PAGE EXIT (refresh / tab quit)
@@ -387,22 +460,50 @@ export class MainPage {
         return;
       }
 
-      this.api
-        .resetGame(this.gameState.key, { keepalive: true })
-        .catch(() => {});
-      GameStorage.removeRoom(this.gameState.key);
+      if (this.gameState.pageState === GameState.PAGE_STATES.WAITING_ROOM) {
+        // No opponent yet, safe to always tear down immediately
+        this.api
+          .resetGame(this.gameState.key, { keepalive: true })
+          .catch(() => {});
+        GameStorage.removeRoom(this.gameState.key);
+        this.gameState.clearSession();
+        return;
+      }
+
+      // Mid-game: don't end the room, just tell the other tab
+      // we're gone for now, and let their grace timer decide.
+      if (this.channel) {
+        this.channel.postMessage({
+          type: "leaving",
+          player: this.gameState.playerCode,
+        });
+      }
+    };
+
+    this.pageshowHandler = (event) => {
+      if (event.persisted && this.channel && this.gameState.playerCode) {
+        this.channel.postMessage({
+          type: "back",
+          player: this.gameState.playerCode,
+        });
+      }
     };
 
     window.addEventListener("pagehide", this.pageExitHandler);
     window.addEventListener("beforeunload", this.pageExitHandler);
+    window.addEventListener("pageshow", this.pageshowHandler);
   }
 
   deregisterPageExit() {
     if (this.pageExitHandler) {
       window.removeEventListener("pagehide", this.pageExitHandler);
       window.removeEventListener("beforeunload", this.pageExitHandler);
+      window.removeEventListener("pageshow", this.pageshowHandler);
       this.pageExitHandler = null;
+      this.pageshowHandler = null;
     }
+
+    this.clearOpponentGrace();
   }
 
   // BROADCAST CHANNEL
@@ -414,8 +515,22 @@ export class MainPage {
     this.channel.onmessage = (event) => {
       const { type, player } = event.data;
 
-      if (type === "quit" && player !== this.gameState.playerCode) {
+      if (player === this.gameState.playerCode) {
+        return;
+      }
+
+      if (type === "quit") {
+        this.clearOpponentGrace();
         this.handleOpponentQuit();
+      }
+
+      if (type === "leaving") {
+        console.log("a player leaves");
+        this.startOpponentGrace();
+      }
+
+      if (type === "back") {
+        this.clearOpponentGrace();
       }
 
       if (type === "restart-ready" && this.gameState.playerCode === "O") {
@@ -462,6 +577,8 @@ export class MainPage {
       this.activeGame.destroy();
       this.activeGame = null;
     }
+
+    this.clearOpponentGrace();
 
     this.leaving = true;
 

@@ -34,7 +34,19 @@ export class GameState {
       return false;
     }
 
-    const data = JSON.parse(session);
+    let data;
+
+    try {
+      data = JSON.parse(session);
+    } catch (e) {
+      this.clearSession();
+      return false;
+    }
+
+    if (!data || (data.player !== "X" && data.player !== "O")) {
+      this.clearSession();
+      return false;
+    }
 
     this.key = data.key;
     this.playerCode = data.player;
@@ -45,9 +57,7 @@ export class GameState {
 
   clearSession() {
     sessionStorage.removeItem("tictactoe-session");
-
-    this.key = null;
-    this.playerCode = null;
+    this.clearData();
   }
 
   clearData() {
