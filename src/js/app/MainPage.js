@@ -13,6 +13,7 @@ import { generateCode } from "../utils/index.js";
 import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
 import { ConfirmationModal } from "../components/modal/ConfirmationModal.js";
 import { ServerDownModal } from "../components/modal/ServerDownModal.js";
+import { Confetti } from "../components/Confetti.js";
 
 const OPPONENT_GRACE_MS = 500;
 
@@ -26,6 +27,7 @@ export class MainPage {
 
     this.activeModal = null;
     this.activeGame = null;
+    this.confetti = null;
 
     this.leaving = false;
     this.pageExitHandler = null;
@@ -262,6 +264,10 @@ export class MainPage {
             this.activeGame = game;
 
             setTimeout(() => {
+              this.celebrateWinner(winner, modal);
+            }, 1200);
+
+            setTimeout(() => {
               if (this.activeModal === modal) {
                 modal.show();
               }
@@ -299,12 +305,33 @@ export class MainPage {
     }
   }
 
+  // CONFETTI
+  celebrateWinner(winner, modal) {
+    this.destroyConfetti();
+
+    if (winner === "DRAW" || winner !== this.gameState.playerCode) {
+      return;
+    }
+
+    const parent = modal?.overlay ?? document.body;
+    this.confetti = new Confetti(parent, 2000);
+    this.confetti.start();
+  }
+
+  destroyConfetti() {
+    if (this.confetti) {
+      this.confetti.destroy();
+      this.confetti = null;
+    }
+  }
+
   async playAgain(modal, game) {
     const key = this.gameState.key;
     if (this.gameState.playerCode !== "X") return;
 
     try {
       game.destroy();
+      this.destroyConfetti();
 
       await this.api.resetGame(key);
       const response = await this.api.createGame(key);
@@ -336,6 +363,7 @@ export class MainPage {
       if (response !== "O") return;
 
       this.activeGame.destroy();
+      this.destroyConfetti();
 
       this.gameState.playerCode = "O";
       GameStorage.setPlayer(key, this.gameState.playerName, "O");
@@ -367,6 +395,7 @@ export class MainPage {
 
   leaveGame(modal, game) {
     game.destroy();
+    this.destroyConfetti();
 
     this.clearOpponentGrace();
 
@@ -394,6 +423,8 @@ export class MainPage {
     if (this.activeGame) {
       this.activeGame.destroy();
     }
+
+    this.destroyConfetti();
 
     if (this.activeModal) {
       this.activeModal.hide();
@@ -578,6 +609,8 @@ export class MainPage {
       this.activeGame.destroy();
       this.activeGame = null;
     }
+
+    this.destroyConfetti();
 
     this.clearOpponentGrace();
 
