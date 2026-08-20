@@ -46,6 +46,10 @@
   width: 100%;
 }
 
+.btn.copied {
+  background: var(--green);
+}
+
 .btn.sm {
   padding: 9px 18px;
   font-size: 0.8rem;

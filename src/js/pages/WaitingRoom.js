@@ -89,9 +89,24 @@ export class WaitingRoom {
     }
 
     const copyCodeBtn = new Button({ text: "Copy Key", variant: "secondary" });
-    copyCodeBtn.onClick(() => {
-      navigator.clipboard.writeText(this.props.key);
-      new Toast("Room Key copied!");
+
+    copyCodeBtn.onClick(async () => {
+      try {
+        await navigator.clipboard.writeText(this.props.key);
+
+        copyCodeBtn.text = "Copied!";
+        copyCodeBtn.addClass("copied");
+        new Toast("Room Key copied!", 1800);
+
+        if (this.resetTimer) {
+          clearTimeout(this.resetTimer);
+        }
+
+        this.resetTimer = setTimeout(() => {
+          copyCodeBtn.removeClass("copied");
+          copyCodeBtn.text = "Copy Key";
+        }, 1800);
+      } catch (error) {}
     });
 
     codeContainer.append(text, keyContainer, copyCodeBtn.element);

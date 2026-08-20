@@ -38,6 +38,10 @@ export class Button {
     this.element.classList.add(...classes);
   }
 
+  removeClass(...classes) {
+    this.element.classList.remove(...classes);
+  }
+
   append(component) {
     this.element.append(component.element);
   }

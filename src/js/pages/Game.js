@@ -328,7 +328,11 @@ export class Game {
 
     this.props.onTurnChange(currentTurn);
 
-    if (this.moveInFlight && !this.gameOver && currentTurn !== this.props.player) {
+    if (
+      this.moveInFlight &&
+      !this.gameOver &&
+      currentTurn !== this.props.player
+    ) {
       this.moveInFlight = false;
     }
 
@@ -346,9 +350,7 @@ export class Game {
     this.updatePlayerTurn(currentTurn);
 
     const isMyTurn =
-      !this.gameOver &&
-      !this.moveInFlight &&
-      currentTurn === this.props.player;
+      !this.gameOver && !this.moveInFlight && currentTurn === this.props.player;
 
     this.boardContainer.classList.toggle(
       "locked",
