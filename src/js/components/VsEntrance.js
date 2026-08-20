@@ -1,15 +1,6 @@
-const svgCache = new Map();
+import { loadSvg } from "../utils/svg.js";
 
 const svgKey = (type) => `./src/assets/icons/${type}-mascot.svg`;
-
-const loadSvg = async (key) => {
-  if (!svgCache.has(key)) {
-    const response = await fetch(key);
-    svgCache.set(key, await response.text());
-  }
-
-  return svgCache.get(key);
-};
 
 const PLAY_DURATION = 1700;
 const EXIT_DURATION = 450;
