@@ -18,7 +18,7 @@ export class WaitingRoom {
 
     const taglines = this.createTagLines();
     const loadingDots = createLoadingDots();
-    const backButton = new BackButton(() => this.props.onBack(), "cancel room");
+    const backButton = new BackButton(() => this.props.onBack(), "Cancel Room");
 
     content.append(
       taglines[0],
@@ -60,7 +60,7 @@ export class WaitingRoom {
   createTagLines() {
     const taglines = [
       "Room ready! Share this key:",
-      "waiting for a challenger to join...",
+      "Waiting for a challenger to join...",
     ].map((line) => {
       const span = document.createElement("span");
       span.classList.add("tagline");

@@ -2,6 +2,8 @@ import { Button } from "../components/Button.js";
 import { Mascot } from "../components/Mascot.js";
 import { HowToPlayModal } from "../components/modal/HowToPlayModal.js";
 
+const ENTRANCE_KEY = "tictactoe-home-entrance";
+
 export class Home {
   constructor(props = {}) {
     this.props = props;
@@ -10,6 +12,11 @@ export class Home {
   render() {
     const container = document.createElement("div");
     container.classList.add("home-container");
+
+    if (!sessionStorage.getItem(ENTRANCE_KEY)) {
+      container.classList.add("entrance");
+      sessionStorage.setItem(ENTRANCE_KEY, "true");
+    }
 
     const contents = document.createElement("div");
     contents.classList.add("contents");
@@ -45,7 +52,7 @@ export class Home {
       this.props.onJoinRoom();
     });
 
-    btnContainers.append(createRoomBtn.element, joinRoomBtn.element);
+    btnContainers.append(joinRoomBtn.element, createRoomBtn.element);
 
     return btnContainers;
   }
@@ -93,7 +100,7 @@ export class Home {
 
     const tagline = document.createElement("p");
     tagline.textContent = "grab a friend, share a code, play";
-    tagline.classList.add("tagline");
+    tagline.classList.add("tagline", "yellow");
 
     headerContainer.append(mascotRow, tictactoeContainer, tagline);
 
