@@ -72,6 +72,7 @@ export class MainPage {
         player: this.gameState.playerCode,
       });
 
+      new Toast("Game Session Restored.", 2000);
       this.setState(GameState.PAGE_STATES.GAME_START);
     } catch (e) {
       this.gameState.clearSession();
