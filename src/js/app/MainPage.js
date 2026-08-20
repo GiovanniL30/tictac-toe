@@ -14,7 +14,7 @@ import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
 import { ConfirmationModal } from "../components/modal/ConfirmationModal.js";
 import { ServerDownModal } from "../components/modal/ServerDownModal.js";
 
-const OPPONENT_GRACE_MS = 2000;
+const OPPONENT_GRACE_MS = 500;
 
 export class MainPage {
   constructor() {
