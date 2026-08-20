@@ -14,6 +14,7 @@ import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
 import { ConfirmationModal } from "../components/modal/ConfirmationModal.js";
 import { ServerDownModal } from "../components/modal/ServerDownModal.js";
 import { Confetti } from "../components/Confetti.js";
+import { VsEntrance } from "../components/VsEntrance.js";
 
 const OPPONENT_GRACE_MS = 500;
 
@@ -28,6 +29,7 @@ export class MainPage {
     this.activeModal = null;
     this.activeGame = null;
     this.confetti = null;
+    this.vsEntrance = null;
 
     this.leaving = false;
     this.pageExitHandler = null;
@@ -164,6 +166,7 @@ export class MainPage {
             this.registerPageExit();
 
             this.setState(GameState.PAGE_STATES.GAME_START);
+            this.playVsEntrance();
           },
         });
 
@@ -177,7 +180,7 @@ export class MainPage {
 
           onGameStart: () => {
             this.setState(GameState.PAGE_STATES.GAME_START);
-            new Toast("Player joined! Starting game.");
+            this.playVsEntrance();
           },
 
           onBack: async () => {
@@ -328,6 +331,30 @@ export class MainPage {
     }
   }
 
+  // VS ENTRANCE
+  playVsEntrance() {
+    this.destroyVsEntrance();
+
+    const players = GameStorage.getPlayers(this.gameState.key);
+
+    this.vsEntrance = new VsEntrance({
+      playerX: players.X ?? "Player X",
+      playerO: players.O ?? "Player O",
+      onComplete: () => {
+        this.vsEntrance = null;
+      },
+    });
+
+    this.vsEntrance.show();
+  }
+
+  destroyVsEntrance() {
+    if (this.vsEntrance) {
+      this.vsEntrance.destroy();
+      this.vsEntrance = null;
+    }
+  }
+
   async playAgain(modal, game) {
     const key = this.gameState.key;
     if (this.gameState.playerCode !== "X") return;
@@ -335,6 +362,7 @@ export class MainPage {
     try {
       game.destroy();
       this.destroyConfetti();
+      this.destroyVsEntrance();
 
       await this.api.resetGame(key);
       const response = await this.api.createGame(key);
@@ -367,6 +395,7 @@ export class MainPage {
 
       this.activeGame.destroy();
       this.destroyConfetti();
+      this.destroyVsEntrance();
 
       this.gameState.playerCode = "O";
       GameStorage.setPlayer(key, this.gameState.playerName, "O");
@@ -399,6 +428,7 @@ export class MainPage {
   leaveGame(modal, game) {
     game.destroy();
     this.destroyConfetti();
+    this.destroyVsEntrance();
 
     this.clearOpponentGrace();
 
@@ -428,6 +458,7 @@ export class MainPage {
     }
 
     this.destroyConfetti();
+    this.destroyVsEntrance();
 
     if (this.activeModal) {
       this.activeModal.hide();
@@ -614,6 +645,7 @@ export class MainPage {
     }
 
     this.destroyConfetti();
+    this.destroyVsEntrance();
 
     this.clearOpponentGrace();
 
