@@ -283,9 +283,7 @@ export class Game {
     if (winner !== "DRAW") {
       this.refreshScoreBoard();
 
-      if (this.props.player === "X") {
-        GameStorage.incrementWin(this.props.key, winner);
-      }
+      GameStorage.incrementWin(this.props.key, winner);
     }
 
     if (winner === "DRAW") {
@@ -321,21 +319,6 @@ export class Game {
 
       this.updateBoard(response);
       this.updateSpectatorCount();
-
-      if (this.props.onCheckStatus) {
-        const status = await this.props.onCheckStatus();
-
-        if (status === "true") {
-          this.gameStarted = true;
-        }
-
-        if (status === "false" && this.gameStarted && !this.quitting) {
-          this.quitting = true;
-          this.stopPolling();
-          this.stopStorageListener();
-          this.props.onOpponentQuit();
-        }
-      }
     } catch (error) {
       console.error("Failed to synchronize board:", error);
     }
@@ -345,10 +328,6 @@ export class Game {
   startStorageListener() {
     this.storageListener = (event) => {
       if (event.key === GameStorage.getPlayersKey(this.props.key)) {
-        this.refreshScoreBoard();
-      }
-
-      if (event.key === GameStorage.getScoresKey(this.props.key)) {
         this.refreshScoreBoard();
       }
     };

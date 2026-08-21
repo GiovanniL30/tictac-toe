@@ -16,15 +16,11 @@ import { ServerDownModal } from "../components/modal/ServerDownModal.js";
 import { Confetti } from "../components/Confetti.js";
 import { VsEntrance } from "../components/VsEntrance.js";
 
-const OPPONENT_GRACE_MS = 500;
-
 export class MainPage {
   constructor() {
     this.container = document.querySelector("#app");
     this.api = new LocalHostApi();
     this.gameState = new GameState();
-
-    this.channel = null;
 
     this.activeModal = null;
     this.activeGame = null;
@@ -33,50 +29,13 @@ export class MainPage {
 
     this.leaving = false;
     this.pageExitHandler = null;
-    this.pageshowHandler = null;
     this.opponentGraceTimer = null;
 
     this.serverStatusPolling = null;
+    this.gameQuitPolling = null;
 
     this.startServerStatusPolling();
     this.render();
-    this.handleReloadRestore();
-  }
-
-  async handleReloadRestore() {
-    const nav = performance.getEntriesByType?.("navigation")?.[0];
-    const isReload = nav?.type === "reload" || performance.navigation?.type === 1;
-
-    if (!isReload) return;
-
-    if (!this.gameState.restoreSession()) return;
-
-    if (this.gameState.playerCode !== "X" && this.gameState.playerCode !== "O") {
-      this.gameState.clearSession();
-      return;
-    }
-
-    try {
-      const status = await this.api.checkGameStatus(this.gameState.key);
-
-      if (status !== "true") {
-        this.gameState.clearSession();
-        return;
-      }
-
-      this.openChannel(this.gameState.key);
-      this.registerPageExit();
-
-      this.channel.postMessage({
-        type: "back",
-        player: this.gameState.playerCode,
-      });
-
-      new Toast("Game Session Restored.", 2000);
-      this.setState(GameState.PAGE_STATES.GAME_START);
-    } catch (e) {
-      this.gameState.clearSession();
-    }
   }
 
   setState(pageState) {
@@ -114,7 +73,6 @@ export class MainPage {
 
               GameStorage.createPlayers(key, playerName, response);
 
-              this.openChannel(key);
               this.registerPageExit();
 
               this.setState(GameState.PAGE_STATES.WAITING_ROOM);
@@ -143,7 +101,6 @@ export class MainPage {
               this.gameState.playerCode = "spectator";
               this.gameState.spectatorId = crypto.randomUUID();
               GameStorage.touchSpectator(key, this.gameState.spectatorId, playerName);
-              this.openChannel(key);
               this.registerPageExit();
               this.setState(GameState.PAGE_STATES.GAME_START);
               new Toast("Game already started, joining as spectator.");
@@ -154,8 +111,8 @@ export class MainPage {
             GameStorage.setPlayer(key, playerName, response);
             this.gameState.saveSession();
 
-            this.openChannel(key);
             this.registerPageExit();
+            this.startQuitPolling(key);
 
             this.setState(GameState.PAGE_STATES.GAME_START);
             this.playVsEntrance();
@@ -183,8 +140,7 @@ export class MainPage {
             this.leaving = true;
             GameStorage.removeRoom(this.gameState.key);
             this.gameState.clearSession();
-            this.deregisterPageExit();
-            this.closeChannel();
+
             this.setState(GameState.PAGE_STATES.HOME);
             new Toast("Game room canceled.");
           },
@@ -200,20 +156,8 @@ export class MainPage {
             return this.api.checkBoardStatus(this.gameState.key);
           },
 
-          onCheckStatus: () => {
-            return this.api.checkGameStatus(this.gameState.key);
-          },
-
-          onOpponentQuit: () => {
-            if (this.activeModal) {
-              return;
-            }
-
-            this.activeGame = game;
-            this.handleOpponentQuit();
-          },
-
           onQuit: () => {
+            this.startQuitPolling(this.gameState.key);
             const isSpectator = this.gameState.playerCode === "spectator";
 
             const modal = new ConfirmationModal({
@@ -225,7 +169,13 @@ export class MainPage {
 
               confirmText: isSpectator ? "Stop Spectating" : "Quit Game",
               cancelText: "Cancel",
-              onConfirm: (modal) => (isSpectator ? this.leaveGame(modal, game) : this.quitGame(modal, game)),
+              onConfirm: (modal) => {
+                if (isSpectator) {
+                  this.leaveGame(modal, game);
+                } else {
+                  this.quitGame(modal, game);
+                }
+              },
               onCancel: (modal) => modal.hide(),
             });
 
@@ -237,6 +187,9 @@ export class MainPage {
           },
 
           onGameEnd: (winner, game) => {
+            this.activeGame = game;
+            this.startQuitPolling(this.gameState.key);
+
             const modal = new ResetGameModal({
               title: "Game Over!",
               winner,
@@ -251,7 +204,6 @@ export class MainPage {
             });
 
             this.activeModal = modal;
-            this.activeGame = game;
 
             setTimeout(() => {
               this.celebrateWinner(winner, modal);
@@ -290,6 +242,7 @@ export class MainPage {
         });
 
         this.activeGame = game;
+        this.startQuitPolling(this.gameState.key);
 
         return game;
 
@@ -346,6 +299,9 @@ export class MainPage {
     const key = this.gameState.key;
     if (this.gameState.playerCode !== "X") return;
 
+    this.stopQuitPolling();
+    this.stopOpponentGracePeriod();
+
     try {
       game.destroy();
       this.destroyConfetti();
@@ -358,8 +314,6 @@ export class MainPage {
         throw new Error(`Expected X but received ${response}`);
       }
 
-      this.channel.postMessage({ type: "restart-ready" });
-
       this.activeModal = null;
       this.activeGame = null;
 
@@ -371,40 +325,9 @@ export class MainPage {
     }
   }
 
-  async handleRestartReady() {
-    const key = this.gameState.key;
-
-    if (!this.activeModal || !this.activeGame) return;
-
-    try {
-      const response = await this.api.createGame(key);
-      if (response !== "O") return;
-
-      this.activeGame.destroy();
-      this.destroyConfetti();
-      this.destroyVsEntrance();
-
-      this.gameState.playerCode = "O";
-      GameStorage.setPlayer(key, this.gameState.playerName, "O");
-
-      this.activeModal.hide();
-      this.activeModal = null;
-      this.activeGame = null;
-
-      this.setState(GameState.PAGE_STATES.GAME_START);
-    } catch (e) {
-      new Toast("Failed to join the new game.");
-    }
-  }
-
   // QUIT / LEAVE
   async quitGame(modal, game) {
     try {
-      this.channel.postMessage({
-        type: "quit",
-        player: this.gameState.playerCode,
-      });
-
       await this.api.resetGame(this.gameState.key);
       this.leaveGame(modal, game);
     } catch (e) {
@@ -417,7 +340,7 @@ export class MainPage {
     this.destroyConfetti();
     this.destroyVsEntrance();
 
-    this.clearOpponentGrace();
+    this.stopQuitPolling();
 
     this.activeModal = null;
     this.activeGame = null;
@@ -432,7 +355,6 @@ export class MainPage {
     this.gameState.clearData();
 
     this.deregisterPageExit();
-    this.closeChannel();
 
     this.setState(GameState.PAGE_STATES.HOME);
 
@@ -451,16 +373,13 @@ export class MainPage {
       this.activeModal.hide();
     }
 
-    this.clearOpponentGrace();
+    this.stopQuitPolling();
+    this.stopOpponentGracePeriod();
 
     this.activeModal = null;
     this.activeGame = null;
 
     this.leaving = true;
-
-    try {
-      await this.api.resetGame(this.gameState.key);
-    } catch (e) {}
 
     GameStorage.removeRoom(this.gameState.key);
 
@@ -469,128 +388,119 @@ export class MainPage {
     this.gameState.clearSession();
     this.gameState.clearData();
 
-    this.deregisterPageExit();
-    this.closeChannel();
     this.setState(GameState.PAGE_STATES.HOME);
-  }
-
-  // OPPONENT GRACE PERIOD (lets a refresh survive without ending the game)
-  startOpponentGrace() {
-    this.clearOpponentGrace();
-
-    this.opponentGraceTimer = setTimeout(() => {
-      this.opponentGraceTimer = null;
-      this.handleOpponentQuit();
-    }, OPPONENT_GRACE_MS);
-  }
-
-  clearOpponentGrace() {
-    if (this.opponentGraceTimer) {
-      clearTimeout(this.opponentGraceTimer);
-      this.opponentGraceTimer = null;
-    }
   }
 
   // PAGE EXIT (refresh / tab quit)
   registerPageExit() {
-    if (this.pageExitHandler) {
-      return;
-    }
-
     this.pageExitHandler = () => {
-      if (this.leaving) {
-        return;
-      }
-
-      if (!this.gameState.key) {
-        return;
-      }
-
       if (this.gameState.playerCode !== "X" && this.gameState.playerCode !== "O") {
         return;
       }
 
-      if (this.gameState.pageState === GameState.PAGE_STATES.WAITING_ROOM) {
-        // No opponent yet, safe to always tear down immediately
-        this.api.resetGame(this.gameState.key, { keepalive: true }).catch(() => {});
-        GameStorage.removeRoom(this.gameState.key);
-        this.gameState.clearSession();
-        return;
-      }
-
-      // Mid-game: don't end the room, just tell the other tab
-      // we're gone for now, and let their grace timer decide.
-      if (this.channel) {
-        this.channel.postMessage({
-          type: "leaving",
-          player: this.gameState.playerCode,
-        });
-      }
-    };
-
-    this.pageshowHandler = (event) => {
-      if (event.persisted && this.channel && this.gameState.playerCode) {
-        this.channel.postMessage({
-          type: "back",
-          player: this.gameState.playerCode,
-        });
-      }
+      const key = this.gameState.key;
+      this.api.resetGame(key, { keepalive: true }).catch((e) => console.error("Exit reset failed:", e));
+      GameStorage.removeRoom(key);
+      this.gameState.clearSession();
     };
 
     window.addEventListener("pagehide", this.pageExitHandler);
     window.addEventListener("beforeunload", this.pageExitHandler);
-    window.addEventListener("pageshow", this.pageshowHandler);
   }
 
   deregisterPageExit() {
-    if (this.pageExitHandler) {
-      window.removeEventListener("pagehide", this.pageExitHandler);
-      window.removeEventListener("beforeunload", this.pageExitHandler);
-      window.removeEventListener("pageshow", this.pageshowHandler);
-      this.pageExitHandler = null;
-      this.pageshowHandler = null;
-    }
+    window.removeEventListener("pagehide", this.pageExitHandler);
+    window.removeEventListener("beforeunload", this.pageExitHandler);
 
-    this.clearOpponentGrace();
+    this.pageExitHandler = null;
   }
 
-  // BROADCAST CHANNEL
-  openChannel(key) {
-    this.closeChannel();
+  startQuitPolling(gameKey) {
+    this.stopQuitPolling();
 
-    this.channel = new BroadcastChannel(`tictactoe-${key}`);
+    this.gameQuitPolling = setInterval(async () => {
+      try {
+        const response = await this.api.checkGameStatus(gameKey);
+        console.log("quit polling");
 
-    this.channel.onmessage = (event) => {
-      const { type, player } = event.data;
+        if (response === "false") {
+          console.log("Opponent may have left.");
+          this.startOpponentGracePeriod(gameKey);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    }, 500);
+  }
 
-      if (player === this.gameState.playerCode) {
+  stopQuitPolling() {
+    if (this.gameQuitPolling) {
+      clearInterval(this.gameQuitPolling);
+      this.gameQuitPolling = null;
+    }
+  }
+
+  startOpponentGracePeriod(gameKey) {
+    if (this.opponentGraceTimer) {
+      return;
+    }
+
+    console.log("Starting opponent grace period...");
+
+    this.opponentGraceTimer = setTimeout(() => {
+      this.opponentGraceTimer = null;
+
+      this.handleRestartOrQuit(gameKey);
+    }, 1500);
+  }
+
+  async handleRestartOrQuit(gameKey) {
+    try {
+      console.log("Checking if X restarted...");
+
+      const response = await this.api.createGame(gameKey);
+
+      console.log("createGame response:", response);
+
+      if (response === "O") {
+        // X restarted, so become O
+        this.stopQuitPolling();
+        this.stopOpponentGracePeriod();
+
+        this.activeGame?.destroy();
+
+        this.destroyConfetti();
+        this.destroyVsEntrance();
+
+        this.gameState.playerCode = "O";
+
+        GameStorage.setPlayer(gameKey, this.gameState.playerName, "O");
+
+        this.activeModal?.hide();
+
+        this.activeModal = null;
+        this.activeGame = null;
+
+        this.setState(GameState.PAGE_STATES.GAME_START);
         return;
       }
 
-      if (type === "quit") {
-        this.clearOpponentGrace();
+      // createGame returned X
+      // Therefore the room was actually reset/abandoned.
+      console.log("Opponent actually quit.");
+
+      if (response === "X") {
         this.handleOpponentQuit();
       }
-
-      if (type === "leaving") {
-        console.log("a player leaves");
-        this.startOpponentGrace();
-      }
-
-      if (type === "back") {
-        this.clearOpponentGrace();
-      }
-
-      if (type === "restart-ready" && this.gameState.playerCode === "O") {
-        this.handleRestartReady();
-      }
-    };
+    } catch (e) {
+      console.error("Failed to determine opponent status:", e);
+    }
   }
 
-  closeChannel() {
-    if (this.channel) {
-      this.channel.close();
-      this.channel = null;
+  stopOpponentGracePeriod() {
+    if (this.opponentGraceTimer) {
+      clearTimeout(this.opponentGraceTimer);
+      this.opponentGraceTimer = null;
     }
   }
 
@@ -629,7 +539,7 @@ export class MainPage {
     this.destroyConfetti();
     this.destroyVsEntrance();
 
-    this.clearOpponentGrace();
+    this.stopQuitPolling();
 
     this.leaving = true;
 
@@ -639,9 +549,6 @@ export class MainPage {
 
     this.gameState.clearSession();
     this.gameState.clearData();
-
-    this.deregisterPageExit();
-    this.closeChannel();
 
     this.setState(GameState.PAGE_STATES.HOME);
 

@@ -1,10 +1,8 @@
 export class GameStorage {
+  static scores = {};
+
   static getPlayersKey(roomKey) {
     return `tictactoe-players-${roomKey}`;
-  }
-
-  static getScoresKey(roomKey) {
-    return `tictactoe-scores-${roomKey}`;
   }
 
   // PLAYERS
@@ -58,29 +56,22 @@ export class GameStorage {
     localStorage.setItem(this.getPlayersKey(roomKey), JSON.stringify(players));
   }
 
-  // SCORES
+  // SCORES - MEMORY ONLY
   static createScores(roomKey) {
-    const scores = {
+    this.scores[roomKey] = {
       X: 0,
       O: 0,
     };
 
-    localStorage.setItem(this.getScoresKey(roomKey), JSON.stringify(scores));
-
-    return scores;
+    return this.scores[roomKey];
   }
 
   static getScores(roomKey) {
-    const data = localStorage.getItem(this.getScoresKey(roomKey));
-
-    if (!data) {
-      return {
-        X: 0,
-        O: 0,
-      };
+    if (!this.scores[roomKey]) {
+      this.createScores(roomKey);
     }
 
-    return JSON.parse(data);
+    return this.scores[roomKey];
   }
 
   static incrementWin(roomKey, player) {
@@ -92,13 +83,11 @@ export class GameStorage {
 
     scores[player]++;
 
-    localStorage.setItem(this.getScoresKey(roomKey), JSON.stringify(scores));
-
     return scores;
   }
 
   static removeScores(roomKey) {
-    localStorage.removeItem(this.getScoresKey(roomKey));
+    delete this.scores[roomKey];
   }
 
   // SPECTATORS
@@ -117,10 +106,7 @@ export class GameStorage {
   }
 
   static saveSpectators(roomKey, spectators) {
-    localStorage.setItem(
-      this.getSpectatorsKey(roomKey),
-      JSON.stringify(spectators),
-    );
+    localStorage.setItem(this.getSpectatorsKey(roomKey), JSON.stringify(spectators));
   }
 
   static touchSpectator(roomKey, spectatorId, playerName) {
@@ -151,9 +137,8 @@ export class GameStorage {
 
   static countSpectators(roomKey, maxAgeMs = 3000) {
     const now = Date.now();
-    const spectators = this.getSpectators(roomKey).filter(
-      (s) => now - s.lastSeen < maxAgeMs,
-    );
+
+    const spectators = this.getSpectators(roomKey).filter((s) => now - s.lastSeen < maxAgeMs);
 
     if (spectators.length !== this.getSpectators(roomKey).length) {
       this.saveSpectators(roomKey, spectators);
@@ -163,8 +148,8 @@ export class GameStorage {
   }
 
   static removeRoom(roomKey) {
-    localStorage.removeItem(this.getPlayersKey(roomKey));
-    localStorage.removeItem(this.getScoresKey(roomKey));
+    this.removePlayers(roomKey);
+    this.removeScores(roomKey);
     localStorage.removeItem(this.getSpectatorsKey(roomKey));
   }
 }
