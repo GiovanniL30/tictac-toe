@@ -9,7 +9,7 @@ import { WaitingRoom } from "../pages/WaitingRoom.js";
 import { LocalHostApi } from "../services/LocalHostApi.js";
 import { GameState } from "../state/GameState.js";
 import { GameStorage } from "../state/GameStorage.js";
-import { generateCode } from "../utils/index.js";
+import { createLoadingDots, generateCode } from "../utils/index.js";
 import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
 import { ConfirmationModal } from "../components/modal/ConfirmationModal.js";
 import { ServerDownModal } from "../components/modal/ServerDownModal.js";
@@ -316,8 +316,17 @@ export class MainPage {
 
       this.activeModal = null;
       this.activeGame = null;
-
       modal.hide();
+
+      const waitModal = new Modal({ title: "Waiting for Player O to load..." });
+      waitModal.show();
+      waitModal.modalContainer.append(createLoadingDots());
+      waitModal.modalContainer.classList.add("center", "white");
+
+      setTimeout(() => {
+        waitModal.hide();
+      }, 1300);
+
       this.setState(GameState.PAGE_STATES.GAME_START);
     } catch (e) {
       console.error(e);
@@ -342,9 +351,6 @@ export class MainPage {
 
     this.stopQuitPolling();
 
-    this.activeModal = null;
-    this.activeGame = null;
-
     this.leaving = true;
 
     if (this.gameState.playerCode == "X" || this.gameState.playerCode == "O") {
@@ -356,8 +362,9 @@ export class MainPage {
 
     this.deregisterPageExit();
 
+    this.activeModal = null;
+    this.activeGame = null;
     this.setState(GameState.PAGE_STATES.HOME);
-
     modal.hide();
   }
 
@@ -430,7 +437,7 @@ export class MainPage {
       } catch (e) {
         console.log(e);
       }
-    }, 500);
+    }, 300);
   }
 
   stopQuitPolling() {
@@ -447,11 +454,15 @@ export class MainPage {
 
     console.log("Starting opponent grace period...");
 
+    if (this.gameState.playerCode === "O" && this.activeModal && this.activeModal instanceof ResetGameModal) {
+      this.activeModal.disableButtons();
+    }
+
     this.opponentGraceTimer = setTimeout(() => {
       this.opponentGraceTimer = null;
 
       this.handleRestartOrQuit(gameKey);
-    }, 1500);
+    }, 1300);
   }
 
   async handleRestartOrQuit(gameKey) {
@@ -513,7 +524,7 @@ export class MainPage {
         this.stopServerStatusPolling();
         this.handleServerDown();
       }
-    }, 500);
+    }, 300);
   }
 
   stopServerStatusPolling() {

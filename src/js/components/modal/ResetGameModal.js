@@ -4,17 +4,7 @@ import { Button } from "../Button.js";
 import { Modal } from "./Modal.js";
 
 export class ResetGameModal extends Modal {
-  constructor({
-    title,
-    winner,
-    player,
-    isSpectator,
-    key,
-    onPlayAgain,
-    onSpectatorLeave,
-    onSpectatorStay,
-    onQuitGame,
-  }) {
+  constructor({ title, winner, player, isSpectator, key, onPlayAgain, onSpectatorLeave, onSpectatorStay, onQuitGame }) {
     super({ title });
 
     this.player = player;
@@ -133,6 +123,9 @@ export class ResetGameModal extends Modal {
 
       stayButton.onClick(() => this.onSpectatorStay(this));
       quitButton.onClick(() => this.onSpectatorLeave(this));
+
+      this.buttons = [stayButton, quitButton];
+
       btnContainer.append(quitButton.element, stayButton.element);
 
       return btnContainer;
@@ -146,6 +139,9 @@ export class ResetGameModal extends Modal {
       });
 
       quitButton.onClick(() => this.onQuitGame(this));
+
+      this.buttons = [quitButton];
+
       btnContainer.append(quitButton.element);
 
       return btnContainer;
@@ -164,8 +160,18 @@ export class ResetGameModal extends Modal {
 
     playAgainButton.onClick(() => this.onPlayAgain(this));
     quitButton.onClick(() => this.onQuitGame(this));
+
+    this.buttons = [playAgainButton, quitButton];
+
     btnContainer.append(quitButton.element, playAgainButton.element);
 
     return btnContainer;
+  }
+
+  disableButtons() {
+    this.buttons?.forEach((button) => {
+      button.element.disabled = true;
+      button.element.style.display = "none";
+    });
   }
 }

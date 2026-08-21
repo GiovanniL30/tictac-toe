@@ -20,13 +20,7 @@ export class WaitingRoom {
     const loadingDots = createLoadingDots();
     const backButton = new BackButton(() => this.props.onBack(), "Cancel Room");
 
-    content.append(
-      taglines[0],
-      codePlate,
-      loadingDots,
-      taglines[1],
-      backButton.element,
-    );
+    content.append(taglines[0], codePlate, loadingDots, taglines[1], backButton.element);
 
     container.append(content);
 
@@ -47,7 +41,7 @@ export class WaitingRoom {
       } catch (e) {
         console.error("Failed to check room:", e);
       }
-    }, 1000);
+    }, 300);
   }
 
   stopPolling() {
@@ -58,10 +52,7 @@ export class WaitingRoom {
   }
 
   createTagLines() {
-    const taglines = [
-      "Room ready! Share this key:",
-      "Waiting for a challenger to join...",
-    ].map((line) => {
+    const taglines = ["Room ready! Share this key:", "Waiting for a challenger to join..."].map((line) => {
       const span = document.createElement("span");
       span.classList.add("tagline");
       span.textContent = line;
