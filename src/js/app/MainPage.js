@@ -454,7 +454,7 @@ export class MainPage {
 
     console.log("Starting opponent grace period...");
 
-    if (this.gameState.playerCode === "O" && this.activeModal && this.activeModal instanceof ResetGameModal) {
+    if (this.activeModal instanceof ResetGameModal) {
       this.activeModal.disableButtons();
     }
 
