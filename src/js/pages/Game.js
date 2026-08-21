@@ -1,27 +1,28 @@
 import { GameStorage } from "../state/GameStorage.js";
 import { Mascot } from "../components/Mascot.js";
-import { Button } from "../components/Button.js";
 import { BackButton } from "../components/BackButton.js";
+import { Board } from "../components/Board.js";
 
 export class Game {
   constructor(props = {}) {
     this.props = props;
 
-    this.currentBoardState = null;
+    this.board = new Board({
+      player: this.props.player,
+      onCellClick: this.props.onCellClick,
+    });
 
     this.polling = null;
     this.storageListener = null;
 
     this.playerTurn = null;
     this.scoreboard = null;
-    this.boardContainer = null;
     this.spectatorsElement = null;
 
     this.gameOver = false;
     this.lastWinner = null;
     this.gameStarted = false;
     this.quitting = false;
-    this.moveInFlight = false;
   }
 
   render() {
@@ -30,7 +31,7 @@ export class Game {
 
     const playerTurn = this.generatePlayerTurn();
     const scoreboard = this.generateScoreBoard();
-    const gameBoard = this.generateBoard();
+    const gameBoard = this.board.render();
     const roomKey = this.generateGameKeyTag();
     const spectators = this.generateSpectatorsBadge();
 
@@ -247,100 +248,16 @@ export class Game {
     this.playerTurnText.textContent = isMyTurn ? "Your turn" : `Waiting for ${playerName}'s move`;
   }
 
-  // MOVE PENDING LOCK
-  lockBoard() {
-    this.boardContainer.classList.add("locked");
-
-    this.boardContainer.querySelectorAll(".cell").forEach((cell) => {
-      cell.classList.add("no-click");
-    });
-  }
-
-  unlockBoard() {
-    this.boardContainer.classList.remove("locked");
-
-    const board = this.currentBoardState ?? [];
-    const isMyTurn = !this.gameOver && this.getCurrentTurn(board) === this.props.player;
-
-    this.boardContainer.querySelectorAll(".cell").forEach((cell) => {
-      const value = cell.dataset.value;
-      const isEmpty = value !== "X" && value !== "O";
-
-      if (isEmpty && isMyTurn) {
-        cell.classList.remove("no-click");
-      } else {
-        cell.classList.add("no-click");
-      }
-    });
-  }
-
-  // BOARD
-  generateBoard() {
-    const boardWrapper = document.createElement("div");
-    boardWrapper.classList.add("board-wrap");
-
-    const boardContainer = document.createElement("div");
-    boardContainer.classList.add("board");
-
-    if (this.props.player == "spectator") {
-      boardContainer.classList.add("locked");
-    }
-
-    this.boardContainer = boardContainer;
-
-    const totalCells = 9;
-
-    for (let i = 0; i < totalCells; i++) {
-      const cell = document.createElement("div");
-
-      cell.classList.add("cell");
-      cell.dataset.i = i;
-
-      cell.addEventListener("click", () => {
-        if (this.moveInFlight || cell.classList.contains("no-click")) {
-          return;
-        }
-
-        this.moveInFlight = true;
-        this.lockBoard();
-
-        this.props.onCellClick(i).then((ok) => {
-          if (!ok) {
-            this.moveInFlight = false;
-            this.unlockBoard();
-          }
-        });
-      });
-
-      boardContainer.append(cell);
-    }
-
-    boardWrapper.append(boardContainer);
-
-    return boardWrapper;
-  }
-
+  // BOARD SYNC
   updateBoard(response) {
-    const board = response.split(":").slice(0, 9);
-    this.currentBoardState = board;
-
-    const currentTurn = this.getCurrentTurn(board);
+    const { board, currentTurn, winner, lastFilled } = this.board.update(response, {
+      player: this.props.player,
+      gameOver: this.gameOver,
+    });
 
     this.props.onTurnChange(currentTurn);
 
-    const boardHTML = document.querySelector(".board");
-
-    if (this.props.player === currentTurn) {
-      boardHTML.classList.add("highlight", this.props.player.toLowerCase());
-    } else {
-      boardHTML.classList.remove("highlight", "x", "o");
-    }
-
-    if (this.moveInFlight && !this.gameOver && currentTurn !== this.props.player) {
-      this.moveInFlight = false;
-    }
-
-    const winner = this.getWinner(board);
+    this.board.setHighlight(this.props.player === currentTurn, currentTurn);
 
     if (winner && !this.gameOver) {
       this.handleGameEnd(winner);
@@ -353,89 +270,10 @@ export class Game {
 
     this.updatePlayerTurn(currentTurn);
 
-    const isMyTurn = !this.gameOver && !this.moveInFlight && currentTurn === this.props.player;
-
-    this.boardContainer.classList.toggle("locked", this.moveInFlight || this.props.player === "spectator");
-
-    const cells = this.boardContainer.querySelectorAll(".cell");
-    let lastFilled = null;
-
-    cells.forEach((cell, i) => {
-      const value = board[i];
-      const isEmpty = value !== "X" && value !== "O";
-
-      if (cell.dataset.value === value) {
-        if (isEmpty && isMyTurn) {
-          cell.classList.remove("no-click");
-        } else {
-          cell.classList.add("no-click");
-        }
-        return;
-      }
-
-      cell.dataset.value = value;
-      cell.replaceChildren();
-
-      if (!isEmpty) {
-        lastFilled = value;
-
-        const chip = document.createElement("span");
-        chip.classList.add("chip", value.toLowerCase());
-        chip.textContent = value;
-        cell.append(chip);
-      }
-
-      if (isEmpty && isMyTurn) {
-        cell.classList.remove("no-click");
-      } else {
-        cell.classList.add("no-click");
-      }
-
-      if (this.props.player == "spectator") {
-        cell.classList.add("locked");
-      }
-    });
-
     if (lastFilled && !this.gameOver) {
       const host = lastFilled === "X" ? this.mascotX : this.mascotO;
       Mascot.place(host);
     }
-  }
-
-  // GAME LOGIC
-  getCurrentTurn(board) {
-    const xCount = board.filter((value) => value === "X").length;
-
-    const oCount = board.filter((value) => value === "O").length;
-
-    return xCount <= oCount ? "X" : "O";
-  }
-
-  getWinner(board) {
-    const winningPatterns = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ];
-
-    for (const [a, b, c] of winningPatterns) {
-      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-        return board[a];
-      }
-    }
-
-    const isDraw = board.every((value) => value === "X" || value === "O");
-
-    if (isDraw) {
-      return "DRAW";
-    }
-
-    return null;
   }
 
   handleGameEnd(winner) {
