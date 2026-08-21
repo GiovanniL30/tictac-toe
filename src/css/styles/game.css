@@ -111,11 +111,14 @@
 }
 
 .score-info .name {
-  font-weight: 700;
   font-size: 0.82rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.score-info .name.bold {
+  font-weight: bolder;
 }
 
 .score-info .wins {
@@ -226,6 +229,15 @@
   box-shadow: var(--shadow-lg);
   transform: rotate(-0.6deg);
   overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.board.highlight.x {
+  border-color: var(--pink);
+}
+
+.board.highlight.o {
+  border-color: var(--blue);
 }
 
 .cell {
@@ -236,6 +248,15 @@
   cursor: pointer;
   border: 3px solid var(--ink);
   z-index: 10;
+  transition: border-color 0.3s ease;
+}
+
+.board.highlight.x .cell {
+  border-color: var(--pink);
+}
+
+.board.highlight.o .cell {
+  border-color: var(--blue);
 }
 
 .cell:nth-child(3n + 1) {

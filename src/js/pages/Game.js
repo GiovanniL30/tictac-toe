@@ -34,23 +34,14 @@ export class Game {
     const roomKey = this.generateGameKeyTag();
     const spectators = this.generateSpectatorsBadge();
 
-    const quitGame = new BackButton(
-      this.props.onQuit,
-      this.props.player === "spectator" ? "Stop Spectating" : "Quit Game",
-    );
+    const quitGame = new BackButton(this.props.onQuit, this.props.player === "spectator" ? "Stop Spectating" : "Quit Game");
 
     this.playerTurn = playerTurn;
     this.scoreboard = scoreboard;
 
     const topbar = this.generateTopbar(roomKey, spectators);
 
-    container.append(
-      topbar,
-      scoreboard,
-      playerTurn,
-      gameBoard,
-      quitGame.element,
-    );
+    container.append(topbar, scoreboard, playerTurn, gameBoard, quitGame.element);
 
     if (this.props.player === "spectator") {
       const spectator = this.generateSpectatorBanner();
@@ -109,7 +100,9 @@ export class Game {
     const players = GameStorage.getPlayers(this.props.key);
     const scores = GameStorage.getScores(this.props.key);
 
-    ["X", "O"].forEach((player, i) => {
+    const order = this.props.player === "O" ? ["O", "X"] : ["X", "O"];
+
+    order.forEach((player, i) => {
       const card = document.createElement("div");
       card.classList.add("score-card");
 
@@ -122,7 +115,14 @@ export class Game {
 
       const name = document.createElement("span");
       name.classList.add("name");
-      name.textContent = players[player] ?? "Waiting...";
+      let playerName = players[player] ?? `Player ${this.props.player}`;
+
+      if (this.props.player === player) {
+        playerName += " (You)";
+        name.classList.add("bold");
+      }
+
+      name.textContent = playerName;
 
       const wins = document.createElement("span");
       wins.classList.add("wins");
@@ -176,8 +176,7 @@ export class Game {
     }
 
     const count = GameStorage.countSpectators(this.props.key);
-    this.spectatorsElement.querySelector("p").textContent =
-      `${count} spectating`;
+    this.spectatorsElement.querySelector("p").textContent = `${count} spectating`;
   }
 
   //PLAYER TURN
@@ -198,7 +197,11 @@ export class Game {
     text.classList.add("turn-text");
     this.playerTurnText = text;
 
-    container.append(catSlot, text, dogSlot);
+    if (this.props.player === "O") {
+      container.append(dogSlot, text, catSlot);
+    } else {
+      container.append(catSlot, text, dogSlot);
+    }
 
     return container;
   }
@@ -241,9 +244,7 @@ export class Game {
     Mascot.setTurn(this.mascotX, currentTurn === "X" ? "on" : "off");
     Mascot.setTurn(this.mascotO, currentTurn === "O" ? "on" : "off");
 
-    this.playerTurnText.textContent = isMyTurn
-      ? "Your turn"
-      : `Waiting for ${playerName}'s move`;
+    this.playerTurnText.textContent = isMyTurn ? "Your turn" : `Waiting for ${playerName}'s move`;
   }
 
   // MOVE PENDING LOCK
@@ -259,8 +260,7 @@ export class Game {
     this.boardContainer.classList.remove("locked");
 
     const board = this.currentBoardState ?? [];
-    const isMyTurn =
-      !this.gameOver && this.getCurrentTurn(board) === this.props.player;
+    const isMyTurn = !this.gameOver && this.getCurrentTurn(board) === this.props.player;
 
     this.boardContainer.querySelectorAll(".cell").forEach((cell) => {
       const value = cell.dataset.value;
@@ -328,11 +328,15 @@ export class Game {
 
     this.props.onTurnChange(currentTurn);
 
-    if (
-      this.moveInFlight &&
-      !this.gameOver &&
-      currentTurn !== this.props.player
-    ) {
+    const boardHTML = document.querySelector(".board");
+
+    if (this.props.player === currentTurn) {
+      boardHTML.classList.add("highlight", this.props.player.toLowerCase());
+    } else {
+      boardHTML.classList.remove("highlight", "x", "o");
+    }
+
+    if (this.moveInFlight && !this.gameOver && currentTurn !== this.props.player) {
       this.moveInFlight = false;
     }
 
@@ -349,13 +353,9 @@ export class Game {
 
     this.updatePlayerTurn(currentTurn);
 
-    const isMyTurn =
-      !this.gameOver && !this.moveInFlight && currentTurn === this.props.player;
+    const isMyTurn = !this.gameOver && !this.moveInFlight && currentTurn === this.props.player;
 
-    this.boardContainer.classList.toggle(
-      "locked",
-      this.moveInFlight || this.props.player === "spectator",
-    );
+    this.boardContainer.classList.toggle("locked", this.moveInFlight || this.props.player === "spectator");
 
     const cells = this.boardContainer.querySelectorAll(".cell");
     let lastFilled = null;

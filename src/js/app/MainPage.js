@@ -45,17 +45,13 @@ export class MainPage {
 
   async handleReloadRestore() {
     const nav = performance.getEntriesByType?.("navigation")?.[0];
-    const isReload =
-      nav?.type === "reload" || performance.navigation?.type === 1;
+    const isReload = nav?.type === "reload" || performance.navigation?.type === 1;
 
     if (!isReload) return;
 
     if (!this.gameState.restoreSession()) return;
 
-    if (
-      this.gameState.playerCode !== "X" &&
-      this.gameState.playerCode !== "O"
-    ) {
+    if (this.gameState.playerCode !== "X" && this.gameState.playerCode !== "O") {
       this.gameState.clearSession();
       return;
     }
@@ -146,11 +142,7 @@ export class MainPage {
             if (response != "O") {
               this.gameState.playerCode = "spectator";
               this.gameState.spectatorId = crypto.randomUUID();
-              GameStorage.touchSpectator(
-                key,
-                this.gameState.spectatorId,
-                playerName,
-              );
+              GameStorage.touchSpectator(key, this.gameState.spectatorId, playerName);
               this.openChannel(key);
               this.registerPageExit();
               this.setState(GameState.PAGE_STATES.GAME_START);
@@ -225,9 +217,7 @@ export class MainPage {
             const isSpectator = this.gameState.playerCode === "spectator";
 
             const modal = new ConfirmationModal({
-              title: isSpectator
-                ? "Stop spectating?"
-                : "Are you sure you want to quit?",
+              title: isSpectator ? "Stop spectating?" : "Are you sure you want to quit?",
 
               message: isSpectator
                 ? "You will stop watching the game and return to the home screen."
@@ -235,10 +225,7 @@ export class MainPage {
 
               confirmText: isSpectator ? "Stop Spectating" : "Quit Game",
               cancelText: "Cancel",
-              onConfirm: (modal) =>
-                isSpectator
-                  ? this.leaveGame(modal, game)
-                  : this.quitGame(modal, game),
+              onConfirm: (modal) => (isSpectator ? this.leaveGame(modal, game) : this.quitGame(modal, game)),
               onCancel: (modal) => modal.hide(),
             });
 
@@ -519,18 +506,13 @@ export class MainPage {
         return;
       }
 
-      if (
-        this.gameState.playerCode !== "X" &&
-        this.gameState.playerCode !== "O"
-      ) {
+      if (this.gameState.playerCode !== "X" && this.gameState.playerCode !== "O") {
         return;
       }
 
       if (this.gameState.pageState === GameState.PAGE_STATES.WAITING_ROOM) {
         // No opponent yet, safe to always tear down immediately
-        this.api
-          .resetGame(this.gameState.key, { keepalive: true })
-          .catch(() => {});
+        this.api.resetGame(this.gameState.key, { keepalive: true }).catch(() => {});
         GameStorage.removeRoom(this.gameState.key);
         this.gameState.clearSession();
         return;
