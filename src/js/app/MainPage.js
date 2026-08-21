@@ -1,4 +1,3 @@
-import { Modal } from "../components/modal/Modal.js";
 import { ResetGameModal } from "../components/modal/ResetGameModal.js";
 import { Toast } from "../components/Toast.js";
 import { CreateRoom } from "../pages/CreateRoom.js";
@@ -198,19 +197,6 @@ export class MainPage {
 
           onCheckBoard: () => {
             return this.api.checkBoardStatus(this.gameState.key);
-          },
-
-          onCheckStatus: () => {
-            return this.api.checkGameStatus(this.gameState.key);
-          },
-
-          onOpponentQuit: () => {
-            if (this.activeModal) {
-              return;
-            }
-
-            this.activeGame = game;
-            this.handleOpponentQuit();
           },
 
           onQuit: () => {
