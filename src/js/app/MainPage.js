@@ -103,6 +103,11 @@ export class MainPage {
 
             try {
               const response = await this.api.createGame(key);
+
+              if (response !== "X") {
+                throw new Error(`Game key ${key} already exists`);
+              }
+
               this.gameState.key = key;
               this.gameState.playerCode = response;
               this.gameState.playerName = playerName;
@@ -115,7 +120,8 @@ export class MainPage {
               this.setState(GameState.PAGE_STATES.WAITING_ROOM);
               new Toast("Created a new room.");
             } catch (e) {
-              new Toast("Failed to create new room." + e);
+              this.api.request(key);
+              new Toast("Failed to create new room: " + e);
             }
           },
         });
@@ -375,6 +381,7 @@ export class MainPage {
       const response = await this.api.createGame(key);
 
       if (response !== PLAYER_ROLE.X) {
+        await this.api.resetGame(key).catch(() => {});
         throw new Error(`Expected X but received ${response}`);
       }
 
@@ -431,7 +438,8 @@ export class MainPage {
     this.leaving = true;
     this.clearRoomAndSession(true);
 
-    new Toast("A player left the game, failed to reconnect.");
+    new Toast("A player left the game. Exiting...");
+
     this.setState(GameState.PAGE_STATES.HOME);
   }
 
@@ -581,6 +589,7 @@ export class MainPage {
       }
 
       if (response === PLAYER_ROLE.X) {
+        await this.api.resetGame(gameKey).catch(() => {});
         console.log("Opponent actually quit.");
         this.handleOpponentQuit();
       }
