@@ -224,6 +224,18 @@ export class MainPage {
         return waitingRoom;
 
       case GameState.PAGE_STATES.GAME_START: {
+        if (this.gameState.key == null) {
+          const home = new Home({
+            onCreateRoom: () => this.setState(GameState.PAGE_STATES.CREATE_ROOM),
+            onJoinRoom: () => this.setState(GameState.PAGE_STATES.JOIN_ROOM),
+          });
+
+          this.stopQuitPolling();
+          this.stopServerStatusPolling();
+          new Toast("Failed to start, a opponent suddenly left the game.");
+          return home;
+        }
+
         const isSpectator = this.gameState.playerCode === PLAYER_ROLE.SPECTATOR;
 
         const game = new Game({
@@ -321,9 +333,7 @@ export class MainPage {
         });
 
         this.activeGame = game;
-
         this.startQuitPolling();
-
         this.startServerStatusPolling();
         return game;
       }
@@ -640,9 +650,10 @@ export class MainPage {
         return;
       }
 
-      if (response == "wait") {
-        let gameStatus = null;
+      let gameStatus = "";
 
+      // play again wait
+      if (response == "wait") {
         for (let i = 0; i < 3; i++) {
           gameStatus = await this.api.checkGameStatus(gameKey);
 
@@ -658,7 +669,8 @@ export class MainPage {
 
       this.waitForOpponent = false;
 
-      if (response === PLAYER_ROLE.X) {
+      // end if the response is X (first player because the lobby is already reset) / while playing again the opponent left
+      if (response === PLAYER_ROLE.X || gameStatus === "false") {
         await this.api.resetGame(gameKey).catch(() => {});
         console.log("Opponent actually quit.");
         this.handleOpponentQuit();
