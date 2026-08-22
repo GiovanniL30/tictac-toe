@@ -413,11 +413,15 @@ export class MainPage {
   async playAgain(modal) {
     if (this.gameState.playerCode !== PLAYER_ROLE.X) return;
 
-    if (modal && modal instanceof Modal) {
-      modal.disableButtons();
-    }
-
     const key = this.gameState.key;
+
+    const serverStatus = await this.api.checkGameStatus(key);
+
+    if (serverStatus === "false") {
+      new Toast("Your opponent left, cannot play again");
+      this.handleOpponentQuit();
+      return;
+    }
 
     this.stopQuitPolling();
     this.stopOpponentGracePeriod();
