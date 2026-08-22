@@ -8,10 +8,17 @@ export class Modal {
 
     this.overlay.append(this.modalContainer);
 
-    const modalTitle = document.createElement("h2");
-    modalTitle.textContent = title;
+    this.modalTitle = document.createElement("h2");
+    this.modalTitle.textContent = title;
 
-    this.modalContainer.append(modalTitle);
+    this.modalContainer.append(this.modalTitle);
+  }
+
+  setTitle(title) {
+    if (!document.querySelector(".modal h2")) {
+      this.modalTitle = title;
+      this.modalContainer.append(this.modalTitle);
+    }
   }
 
   show() {

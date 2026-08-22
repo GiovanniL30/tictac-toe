@@ -1,5 +1,6 @@
 import { Modal } from "../components/modal/Modal.js";
 import { ResetGameModal } from "../components/modal/ResetGameModal.js";
+import { ReconnectingModal } from "../components/modal/ReconnectingModal.js";
 import { Toast } from "../components/Toast.js";
 import { CreateRoom } from "../pages/CreateRoom.js";
 import { Game } from "../pages/Game.js";
@@ -10,11 +11,21 @@ import { LocalHostApi } from "../services/LocalHostApi.js";
 import { GameState } from "../state/GameState.js";
 import { GameStorage } from "../state/GameStorage.js";
 import { createLoadingDots, generateCode } from "../utils/index.js";
+import { Poller } from "../utils/Poller.js";
 import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
 import { ConfirmationModal } from "../components/modal/ConfirmationModal.js";
 import { ServerDownModal } from "../components/modal/ServerDownModal.js";
 import { Confetti } from "../components/Confetti.js";
 import { VsEntrance } from "../components/VsEntrance.js";
+import { PLAYER_ROLE } from "../utils/constants/PlayerRoles.js";
+import { WaitForOpponentModal } from "../components/modal/WaitForOpponentModal.js";
+
+const QUIT_POLL_INTERVAL_MS = 300;
+const SERVER_POLL_INTERVAL_MS = 300;
+const OPPONENT_GRACE_PERIOD_MS = 1000;
+const SPECTATOR_RETURN_ATTEMPTS = 3;
+const SPECTATOR_RETURN_DELAY_MS = 500;
+const SERVER_HEALTH_CHECK_KEY = "1234";
 
 export class MainPage {
   constructor() {
@@ -31,12 +42,38 @@ export class MainPage {
     this.pageExitHandler = null;
     this.opponentGraceTimer = null;
 
-    this.serverStatusPolling = null;
-    this.gameQuitPolling = null;
+    this.reconnectModal = null;
+    this.spectatorReconnectModal = null;
+    this.waitForOpponent = false;
+
+    this.quitPoller = new Poller(this.checkOpponentPresence, QUIT_POLL_INTERVAL_MS);
+    this.serverStatusPoller = new Poller(this.checkServerStatus, SERVER_POLL_INTERVAL_MS);
 
     this.startServerStatusPolling();
     this.render();
   }
+
+  checkOpponentPresence = async () => {
+    try {
+      const response = await this.api.checkGameStatus(this.gameState.key);
+
+      if (response === "false") {
+        this.startOpponentGracePeriod();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  checkServerStatus = async () => {
+    try {
+      await this.api.checkGameStatus(SERVER_HEALTH_CHECK_KEY);
+    } catch (e) {
+      console.error("Server is down:", e);
+      this.stopServerStatusPolling();
+      this.handleServerDown();
+    }
+  };
 
   setState(pageState) {
     this.gameState.pageState = pageState;
@@ -89,7 +126,7 @@ export class MainPage {
           onJoin: async (key, playerName) => {
             const response = await this.api.createGame(key);
 
-            if (response === "X") {
+            if (response === PLAYER_ROLE.X) {
               await this.api.resetGame(key).catch(() => {});
               throw new RoomNotFoundError();
             }
@@ -97,13 +134,13 @@ export class MainPage {
             this.gameState.key = key;
             this.gameState.playerName = playerName;
 
-            if (response != "O") {
-              this.gameState.playerCode = "spectator";
+            if (response !== PLAYER_ROLE.O) {
+              this.gameState.playerCode = PLAYER_ROLE.SPECTATOR;
               this.gameState.spectatorId = crypto.randomUUID();
               GameStorage.touchSpectator(key, this.gameState.spectatorId, playerName);
               this.registerPageExit();
               this.setState(GameState.PAGE_STATES.GAME_START);
-              this.startQuitPolling(key);
+              this.startQuitPolling();
               new Toast("Game already started, joining as spectator.");
               return;
             }
@@ -113,7 +150,7 @@ export class MainPage {
             this.gameState.saveSession();
 
             this.registerPageExit();
-            this.startQuitPolling(key);
+            this.startQuitPolling();
 
             this.setState(GameState.PAGE_STATES.GAME_START);
             this.playVsEntrance();
@@ -147,7 +184,9 @@ export class MainPage {
           },
         });
 
-      case GameState.PAGE_STATES.GAME_START:
+      case GameState.PAGE_STATES.GAME_START: {
+        const isSpectator = this.gameState.playerCode === PLAYER_ROLE.SPECTATOR;
+
         const game = new Game({
           key: this.gameState.key,
           player: this.gameState.playerCode,
@@ -158,8 +197,7 @@ export class MainPage {
           },
 
           onQuit: () => {
-            this.startQuitPolling(this.gameState.key);
-            const isSpectator = this.gameState.playerCode === "spectator";
+            this.startQuitPolling();
 
             const modal = new ConfirmationModal({
               title: isSpectator ? "Stop spectating?" : "Are you sure you want to quit?",
@@ -170,13 +208,7 @@ export class MainPage {
 
               confirmText: isSpectator ? "Stop Spectating" : "Quit Game",
               cancelText: "Cancel",
-              onConfirm: (modal) => {
-                if (isSpectator) {
-                  this.leaveGame(modal, game);
-                } else {
-                  this.quitGame(modal, game);
-                }
-              },
+              onConfirm: (modal) => (isSpectator ? this.leaveGame(modal) : this.quitGame(modal)),
               onCancel: (modal) => modal.hide(),
             });
 
@@ -188,21 +220,20 @@ export class MainPage {
             this.gameState.currentTurn = currentTurn;
           },
 
-          onGameEnd: (winner, game) => {
-            this.activeGame = game;
-            this.startQuitPolling(this.gameState.key);
+          onGameEnd: (winner) => {
+            this.startQuitPolling();
 
             const modal = new ResetGameModal({
               title: "Game Over!",
               winner,
               player: this.gameState.playerCode,
-              isSpectator: this.gameState.playerCode === "spectator",
+              isSpectator,
               key: this.gameState.key,
 
-              onPlayAgain: (modal) => this.playAgain(modal, game),
-              onSpectatorLeave: (modal) => this.leaveGame(modal, game),
+              onPlayAgain: (modal) => this.playAgain(modal),
+              onSpectatorLeave: (modal) => this.leaveGame(modal),
               onSpectatorStay: (modal) => modal.hide(),
-              onQuitGame: (modal) => this.quitGame(modal, game),
+              onQuitGame: (modal) => this.quitGame(modal),
             });
 
             this.activeModal = modal;
@@ -244,13 +275,46 @@ export class MainPage {
         });
 
         this.activeGame = game;
-        this.startQuitPolling(this.gameState.key);
+        this.startQuitPolling();
 
         return game;
+      }
 
       default:
         throw new Error(`Unknown page state: ${this.gameState.pageState}`);
     }
+  }
+
+  closeActiveModal() {
+    if (this.activeModal) {
+      this.activeModal.hide();
+      this.activeModal = null;
+    }
+  }
+
+  dismissModal(modal) {
+    modal.hide();
+
+    if (this.activeModal === modal) {
+      this.activeModal = null;
+    }
+  }
+
+  teardownActiveGame() {
+    this.activeGame?.destroy();
+    this.activeGame = null;
+
+    this.destroyConfetti();
+    this.destroyVsEntrance();
+  }
+
+  clearRoomAndSession(shouldRemoveRoom) {
+    if (shouldRemoveRoom && this.gameState.key) {
+      GameStorage.removeRoom(this.gameState.key);
+    }
+
+    this.gameState.clearSession();
+    this.gameState.clearData();
   }
 
   // CONFETTI
@@ -297,28 +361,35 @@ export class MainPage {
     }
   }
 
-  async playAgain(modal, game) {
+  async playAgain(modal) {
+    if (this.gameState.playerCode !== PLAYER_ROLE.X) return;
+
     const key = this.gameState.key;
-    if (this.gameState.playerCode !== "X") return;
 
     this.stopQuitPolling();
     this.stopOpponentGracePeriod();
 
     try {
-      game.destroy();
-      this.destroyConfetti();
-      this.destroyVsEntrance();
+      this.teardownActiveGame();
 
       await this.api.resetGame(key);
       const response = await this.api.createGame(key);
 
-      if (response !== "X") {
+      if (response !== PLAYER_ROLE.X) {
         throw new Error(`Expected X but received ${response}`);
       }
 
-      this.activeModal = null;
-      this.activeGame = null;
-      modal.hide();
+      this.dismissModal(modal);
+
+      const waitModal = new WaitForOpponentModal();
+      waitModal.show();
+      this.waitForOpponent = true;
+
+      setTimeout(() => {
+        this.waitForOpponent = false;
+        this.dismissModal(waitModal);
+      }, OPPONENT_GRACE_PERIOD_MS);
+
       this.setState(GameState.PAGE_STATES.GAME_START);
     } catch (e) {
       console.error(e);
@@ -327,61 +398,39 @@ export class MainPage {
   }
 
   // QUIT / LEAVE
-  async quitGame(modal, game) {
+  async quitGame(modal) {
     try {
       await this.api.resetGame(this.gameState.key);
-      this.leaveGame(modal, game);
+      this.leaveGame(modal);
     } catch (e) {
       new Toast("Failed to quit game.");
     }
   }
 
-  leaveGame(modal, game) {
-    game.destroy();
-    this.destroyConfetti();
-    this.destroyVsEntrance();
-
+  leaveGame(modal) {
+    this.teardownActiveGame();
     this.stopQuitPolling();
 
     this.leaving = true;
 
-    if (this.gameState.playerCode == "X" || this.gameState.playerCode == "O") {
-      GameStorage.removeRoom(this.gameState.key);
-    }
-
-    this.gameState.clearSession();
-    this.gameState.clearData();
+    const isPlayer = this.gameState.playerCode === PLAYER_ROLE.X || this.gameState.playerCode === PLAYER_ROLE.O;
+    this.clearRoomAndSession(isPlayer);
 
     this.deregisterPageExit();
+    this.dismissModal(modal);
 
-    this.activeModal = null;
-    this.activeGame = null;
     this.setState(GameState.PAGE_STATES.HOME);
-    modal.hide();
   }
 
-  async handleOpponentQuit() {
-    if (this.activeGame) {
-      this.activeGame.destroy();
-    }
-
-    this.destroyConfetti();
-    this.destroyVsEntrance();
-
-    this.activeModal?.hide();
+  handleOpponentQuit() {
+    this.teardownActiveGame();
+    this.closeActiveModal();
 
     this.stopQuitPolling();
     this.stopOpponentGracePeriod();
 
-    this.activeModal = null;
-    this.activeGame = null;
-
     this.leaving = true;
-
-    GameStorage.removeRoom(this.gameState.key);
-
-    this.gameState.clearSession();
-    this.gameState.clearData();
+    this.clearRoomAndSession(true);
 
     this.setState(GameState.PAGE_STATES.HOME);
   }
@@ -389,7 +438,7 @@ export class MainPage {
   // PAGE EXIT (refresh / tab quit)
   registerPageExit() {
     this.pageExitHandler = () => {
-      if (this.gameState.playerCode !== "X" && this.gameState.playerCode !== "O") {
+      if (this.gameState.playerCode !== PLAYER_ROLE.X && this.gameState.playerCode !== PLAYER_ROLE.O) {
         return;
       }
 
@@ -410,32 +459,27 @@ export class MainPage {
     this.pageExitHandler = null;
   }
 
-  startQuitPolling(gameKey) {
-    this.stopQuitPolling();
+  // POLLING
 
-    this.gameQuitPolling = setInterval(async () => {
-      try {
-        const response = await this.api.checkGameStatus(gameKey);
-        console.log("quit polling");
-
-        if (response === "false") {
-          console.log("Opponent may have left.");
-          this.startOpponentGracePeriod(gameKey);
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    }, 300);
+  startQuitPolling() {
+    this.quitPoller.start();
   }
 
   stopQuitPolling() {
-    if (this.gameQuitPolling) {
-      clearInterval(this.gameQuitPolling);
-      this.gameQuitPolling = null;
-    }
+    this.quitPoller.stop();
   }
 
-  startOpponentGracePeriod(gameKey) {
+  startServerStatusPolling() {
+    this.serverStatusPoller.start();
+  }
+
+  stopServerStatusPolling() {
+    this.serverStatusPoller.stop();
+  }
+
+  // OPPONENT GRACE PERIOD
+
+  startOpponentGracePeriod() {
     if (this.opponentGraceTimer) {
       return;
     }
@@ -449,8 +493,8 @@ export class MainPage {
 
     this.opponentGraceTimer = setTimeout(() => {
       this.opponentGraceTimer = null;
-      this.handleRestartOrQuit(gameKey);
-    }, 1000);
+      this.handleRestartOrQuit();
+    }, OPPONENT_GRACE_PERIOD_MS);
   }
 
   stopOpponentGracePeriod() {
@@ -463,21 +507,18 @@ export class MainPage {
   }
 
   showReconnecting() {
-    this.activeModal.hide();
-    this.activeModal.disableButtons();
+    if (this.waitForOpponent) return;
 
-    const modal = new Modal({ title: "Reconnecting…" });
+    if (this.activeModal) {
+      this.activeModal.hide();
+      this.activeModal.disableButtons();
+    }
+
+    const modal = new ReconnectingModal({
+      message: "Checking if your opponent is still there…",
+    });
 
     modal.show();
-
-    modal.modalContainer.append(
-      Object.assign(document.createElement("p"), {
-        textContent: "Checking if your opponent is still there…",
-      }),
-    );
-
-    modal.modalContainer.append(createLoadingDots());
-    modal.modalContainer.classList.add("center", "white");
 
     this.reconnectModal = modal;
     this.activeModal = modal;
@@ -497,30 +538,25 @@ export class MainPage {
     this.reconnectModal = null;
   }
 
-  async handleRestartOrQuit(gameKey) {
-    const isSpectator = this.gameState.playerCode === "spectator";
+  async handleRestartOrQuit() {
+    const gameKey = this.gameState.key;
+    const isSpectator = this.gameState.playerCode === PLAYER_ROLE.SPECTATOR;
 
     try {
       if (isSpectator) {
-        const status = await this.pollForSpectatorReturn(gameKey);
+        const status = await this.pollForSpectatorReturn();
 
         if (status === "true") {
           this.stopQuitPolling();
           this.stopOpponentGracePeriod();
 
-          this.activeGame?.destroy();
-          this.destroyConfetti();
-          this.destroyVsEntrance();
-
-          if (this.activeModal) {
-            this.activeModal.hide();
-            this.activeModal = null;
-          }
+          this.teardownActiveGame();
+          this.closeActiveModal();
 
           GameStorage.touchSpectator(gameKey, this.gameState.spectatorId, this.gameState.playerName);
 
           this.setState(GameState.PAGE_STATES.GAME_START);
-          this.startQuitPolling(gameKey);
+          this.startQuitPolling();
           return;
         }
 
@@ -532,26 +568,21 @@ export class MainPage {
       const response = await this.api.createGame(gameKey);
       console.log("createGame response:", response);
 
-      if (response === "O") {
+      if (response === PLAYER_ROLE.O) {
         this.stopQuitPolling();
         this.stopOpponentGracePeriod();
 
-        this.activeGame?.destroy();
-        this.destroyConfetti();
-        this.destroyVsEntrance();
+        this.teardownActiveGame();
+        this.closeActiveModal();
 
-        this.gameState.playerCode = "O";
-        GameStorage.setPlayer(gameKey, this.gameState.playerName, "O");
-
-        this.activeModal?.hide();
-        this.activeModal = null;
-        this.activeGame = null;
+        this.gameState.playerCode = PLAYER_ROLE.O;
+        GameStorage.setPlayer(gameKey, this.gameState.playerName, PLAYER_ROLE.O);
 
         this.setState(GameState.PAGE_STATES.GAME_START);
         return;
       }
 
-      if (response === "X") {
+      if (response === PLAYER_ROLE.X) {
         console.log("Opponent actually quit.");
         this.handleOpponentQuit();
       }
@@ -560,7 +591,8 @@ export class MainPage {
     }
   }
 
-  async pollForSpectatorReturn(gameKey, attempts = 3, delayMs = 500) {
+  async pollForSpectatorReturn(attempts = SPECTATOR_RETURN_ATTEMPTS, delayMs = SPECTATOR_RETURN_DELAY_MS) {
+    const gameKey = this.gameState.key;
     this.showSpectatorReconnecting();
 
     try {
@@ -589,18 +621,11 @@ export class MainPage {
 
     this.activeModal.hide();
 
-    const modal = new Modal({ title: "Reconnecting…" });
+    const modal = new ReconnectingModal({
+      message: "Checking if the match is still live…",
+    });
 
     modal.show();
-
-    modal.modalContainer.append(
-      Object.assign(document.createElement("p"), {
-        textContent: "Checking if the match is still live…",
-      }),
-    );
-
-    modal.modalContainer.append(createLoadingDots());
-    modal.modalContainer.classList.add("center", "white");
 
     this.spectatorReconnectModal = modal;
     this.activeModal = modal;
@@ -624,20 +649,10 @@ export class MainPage {
     this.stopQuitPolling();
     this.stopOpponentGracePeriod();
 
-    if (this.activeGame) {
-      this.activeGame.destroy();
-      this.activeGame = null;
-    }
+    this.teardownActiveGame();
+    this.closeActiveModal();
 
-    this.destroyConfetti();
-    this.destroyVsEntrance();
-
-    if (this.activeModal) {
-      this.activeModal.hide();
-      this.activeModal = null;
-    }
-
-    const isSpectator = this.gameState.playerCode === "spectator";
+    const isSpectator = this.gameState.playerCode === PLAYER_ROLE.SPECTATOR;
 
     const modal = new Modal({
       title: isSpectator ? "Game Ended" : "Opponent Left",
@@ -658,51 +673,15 @@ export class MainPage {
     this.handleOpponentQuit();
   }
 
-  startServerStatusPolling() {
-    this.serverStatusPolling = setInterval(async () => {
-      try {
-        await this.api.checkGameStatus("1234");
-      } catch (e) {
-        console.error("Server is down:", e);
-        this.stopServerStatusPolling();
-        this.handleServerDown();
-      }
-    }, 300);
-  }
-
-  stopServerStatusPolling() {
-    if (this.serverStatusPolling) {
-      clearInterval(this.serverStatusPolling);
-      this.serverStatusPolling = null;
-    }
-  }
-
   handleServerDown() {
     if (this.leaving) return;
 
-    if (this.activeModal) {
-      this.activeModal.hide();
-      this.activeModal = null;
-    }
-
-    if (this.activeGame) {
-      this.activeGame.destroy();
-      this.activeGame = null;
-    }
-
-    this.destroyConfetti();
-    this.destroyVsEntrance();
-
+    this.closeActiveModal();
+    this.teardownActiveGame();
     this.stopQuitPolling();
 
     this.leaving = true;
-
-    if (this.gameState.key) {
-      GameStorage.removeRoom(this.gameState.key);
-    }
-
-    this.gameState.clearSession();
-    this.gameState.clearData();
+    this.clearRoomAndSession(Boolean(this.gameState.key));
 
     this.setState(GameState.PAGE_STATES.HOME);
 

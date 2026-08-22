@@ -43,10 +43,6 @@
   color: #fff;
 }
 
-.modal.white {
-  background: #fff;
-}
-
 .modal.blue {
   background: var(--blue);
   color: #fff;
@@ -55,6 +51,10 @@
 .modal.red {
   background: var(--red);
   color: #fff;
+}
+
+.modal.white {
+  background: #fff;
 }
 
 .modal.center {
