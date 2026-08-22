@@ -293,9 +293,10 @@ export class MainPage {
         });
 
         this.activeGame = game;
-        this.startQuitPolling();
-        this.startServerStatusPolling();
 
+        this.startQuitPolling();
+
+        this.startServerStatusPolling();
         return game;
       }
 
@@ -407,7 +408,6 @@ export class MainPage {
       this.waitForOpponent = true;
 
       setTimeout(() => {
-        this.waitForOpponent = false;
         this.dismissModal(waitModal);
         this.setState(GameState.PAGE_STATES.GAME_START);
       }, OPPONENT_GRACE_PERIOD_MS + 250);
@@ -586,7 +586,8 @@ export class MainPage {
         return;
       }
 
-      const response = await this.api.createGame(gameKey);
+      //avoids player x to steal slot of player O
+      const response = this.waitForOpponent ? "wait" : await this.api.createGame(gameKey);
       console.log("createGame response:", response);
 
       if (this.gameState.playerCode === PLAYER_ROLE.O && response === PLAYER_ROLE.O) {
@@ -603,12 +604,31 @@ export class MainPage {
         return;
       }
 
+      if (response == "wait") {
+        let gameStatus = null;
+
+        for (let i = 0; i < 3; i++) {
+          gameStatus = await this.api.checkGameStatus(gameKey);
+
+          if (gameStatus !== "false") {
+            break;
+          }
+
+          if (i < 2) {
+            await new Promise((resolve) => setTimeout(resolve, OPPONENT_GRACE_PERIOD_MS));
+          }
+        }
+      }
+
+      this.waitForOpponent = false;
+
       if (response === PLAYER_ROLE.X) {
         await this.api.resetGame(gameKey).catch(() => {});
         console.log("Opponent actually quit.");
         this.handleOpponentQuit();
       }
     } catch (e) {
+      this.closeActiveModal();
       console.error("Failed to determine opponent status:", e);
     }
   }
