@@ -137,7 +137,6 @@ export class MainPage {
             if (response !== PLAYER_ROLE.O) {
               this.gameState.playerCode = PLAYER_ROLE.SPECTATOR;
               this.gameState.spectatorId = crypto.randomUUID();
-              GameStorage.touchSpectator(key, this.gameState.spectatorId, playerName);
               this.registerPageExit();
               this.setState(GameState.PAGE_STATES.GAME_START);
               this.startQuitPolling();
@@ -432,6 +431,7 @@ export class MainPage {
     this.leaving = true;
     this.clearRoomAndSession(true);
 
+    new Toast("A player left the game, failed to reconnect.");
     this.setState(GameState.PAGE_STATES.HOME);
   }
 
@@ -552,8 +552,6 @@ export class MainPage {
 
           this.teardownActiveGame();
           this.closeActiveModal();
-
-          GameStorage.touchSpectator(gameKey, this.gameState.spectatorId, this.gameState.playerName);
 
           this.setState(GameState.PAGE_STATES.GAME_START);
           this.startQuitPolling();

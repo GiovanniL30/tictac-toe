@@ -33,14 +33,13 @@ export class Game {
     const scoreboard = this.generateScoreBoard();
     const gameBoard = this.board.render();
     const roomKey = this.generateGameKeyTag();
-    const spectators = this.generateSpectatorsBadge();
 
     const quitGame = new BackButton(this.props.onQuit, this.props.player === "spectator" ? "Stop Spectating" : "Quit Game");
 
     this.playerTurn = playerTurn;
     this.scoreboard = scoreboard;
 
-    const topbar = this.generateTopbar(roomKey, spectators);
+    const topbar = this.generateTopbar(roomKey);
 
     container.append(topbar, scoreboard, playerTurn, gameBoard, quitGame.element);
 
@@ -71,11 +70,11 @@ export class Game {
     return container;
   }
 
-  generateTopbar(roomTag, spectators) {
+  generateTopbar(roomTag) {
     const topbar = document.createElement("div");
     topbar.classList.add("game-topbar");
 
-    topbar.append(roomTag, spectators);
+    topbar.append(roomTag);
 
     return topbar;
   }
@@ -147,37 +146,6 @@ export class Game {
     this.scoreboard.replaceWith(newScoreboard);
 
     this.scoreboard = newScoreboard;
-  }
-
-  // SPECTATORS
-  generateSpectatorsBadge() {
-    const container = document.createElement("div");
-    container.classList.add("spectators");
-
-    const dot = document.createElement("div");
-    dot.classList.add("dot");
-
-    const p = document.createElement("p");
-    p.textContent = "0 spectating";
-
-    container.append(dot, p);
-
-    this.spectatorsElement = container;
-
-    return container;
-  }
-
-  updateSpectatorCount() {
-    if (!this.spectatorsElement) {
-      return;
-    }
-
-    if (this.props.player === "spectator" && this.props.spectatorId) {
-      GameStorage.touchSpectator(this.props.key, this.props.spectatorId);
-    }
-
-    const count = GameStorage.countSpectators(this.props.key);
-    this.spectatorsElement.querySelector("p").textContent = `${count} spectating`;
   }
 
   //PLAYER TURN
@@ -348,9 +316,5 @@ export class Game {
   destroy() {
     this.stopPolling();
     this.stopStorageListener();
-
-    if (this.props.player === "spectator" && this.props.spectatorId) {
-      GameStorage.removeSpectator(this.props.key, this.props.spectatorId);
-    }
   }
 }
