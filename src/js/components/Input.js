@@ -9,6 +9,7 @@ export class Input {
     required = false,
     disabled = false,
     maxLength = 10,
+    alphanumeric = true,
   } = {}) {
     this.element = document.createElement("input");
 
@@ -24,6 +25,18 @@ export class Input {
     this.element.maxLength = maxLength;
 
     this.element.classList.add("input");
+
+    if (alphanumeric) {
+      this.element.addEventListener("keydown", (event) => {
+        if (event.key === " ") {
+          event.preventDefault();
+        }
+      });
+
+      this.element.addEventListener("input", () => {
+        this.value = this.value.replace(/[^a-zA-Z0-9]/g, "");
+      });
+    }
   }
 
   get value() {
