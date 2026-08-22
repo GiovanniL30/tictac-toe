@@ -38,10 +38,12 @@ export class Board {
 
         this.moveInFlight = true;
         this.lock();
+        this.showPendingMove(cell);
 
         this.props.onCellClick(i).then((ok) => {
           if (!ok) {
             this.moveInFlight = false;
+            this.clearPendingMove(cell);
             this.unlock(this.isMyTurn());
           }
         });
@@ -120,12 +122,37 @@ export class Board {
     });
   }
 
-  // TURN HIGHLIGHT (glow around the board when it's your turn)
+  // TURN HIGHLIGHT
   setHighlight(active, player) {
     if (active) {
       this.boardContainer.classList.add("highlight", player.toLowerCase());
     } else {
       this.boardContainer.classList.remove("highlight", "x", "o");
+    }
+  }
+
+  // OPTIMISTIC UI
+  showPendingMove(cell) {
+    cell.replaceChildren();
+
+    const chip = document.createElement("span");
+    chip.classList.add("chip", this.props.player.toLowerCase(), "pending");
+    chip.textContent = this.props.player;
+
+    cell.append(chip);
+  }
+
+  clearPendingMove(cell) {
+    const value = cell.dataset.value;
+    const isEmpty = value !== "X" && value !== "O";
+
+    cell.replaceChildren();
+
+    if (!isEmpty) {
+      const chip = document.createElement("span");
+      chip.classList.add("chip", value.toLowerCase());
+      chip.textContent = value;
+      cell.append(chip);
     }
   }
 

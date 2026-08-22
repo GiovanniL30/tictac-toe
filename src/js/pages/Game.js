@@ -294,10 +294,10 @@ export class Game {
       return;
     }
 
-    try {
-      this.checkingBoard = true;
-      const response = await this.props.onCheckBoard();
+    this.checkingBoard = true;
 
+    try {
+      const response = await this.props.onCheckBoard();
       this.updateBoard(response);
     } catch (error) {
       console.error("Failed to synchronize board:", error);

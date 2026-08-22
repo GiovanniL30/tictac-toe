@@ -48,19 +48,9 @@ export class HowToPlayModal extends Modal {
         { text: "Join a Room", bold: true },
         " if a friend sent you one.",
       ],
-      [
-        "Share your code with a friend, copy it and send it however you'd like.",
-      ],
-      [
-        "The moment they join, the match ",
-        { text: "starts automatically", bold: true },
-        ", no ready-up needed.",
-      ],
-      [
-        "Take turns tapping empty tiles. First to get ",
-        { text: "3 in a row", bold: true },
-        ", across, down, or diagonal wins!",
-      ],
+      ["Share your code with a friend, copy it and send it however you'd like."],
+      ["The moment they join, the match ", { text: "starts automatically", bold: true }, ", no ready-up needed."],
+      ["Take turns tapping empty tiles. First to get ", { text: "3 in a row", bold: true }, ", across, down, or diagonal wins!"],
     ];
 
     stepsData.forEach((segments, i) => {
@@ -100,8 +90,7 @@ export class HowToPlayModal extends Modal {
     note.classList.add("spectator-note");
 
     const text = document.createElement("span");
-    text.textContent =
-      "Anyone else who joins with the code watches live as a spectator.";
+    text.textContent = "Anyone else who joins with the code watches live as a spectator.";
 
     note.append(text);
     return note;
@@ -109,7 +98,7 @@ export class HowToPlayModal extends Modal {
 
   createCloseButton() {
     const btn = document.createElement("button");
-    btn.classList.add("btn", "pink", "block");
+    btn.classList.add("btn", "blue", "block");
     btn.textContent = "Got it, let's play!";
     btn.addEventListener("click", () => this.hide());
     return btn;

@@ -66,6 +66,11 @@ export class MainPage {
       const response = await this.api.checkGameStatus(this.gameState.key);
 
       if (response === "false") {
+        if (this.activeModal) {
+          this.activeModal.hide();
+          this.activeModal.disableButtons();
+        }
+
         this.startOpponentGracePeriod();
       }
     } catch (e) {
@@ -280,18 +285,18 @@ export class MainPage {
           },
 
           onCellClick: async (i) => {
-            const gameStatus = await this.api.checkGameStatus(this.gameState.key);
-
-            if (gameStatus == "false") {
-              return false;
-            }
-
             if (this.gameState.currentTurn !== this.gameState.playerCode) {
               return false;
             }
 
             const x = i % 3;
             const y = Math.floor(i / 3);
+
+            let registeringToast = null;
+
+            const slowRequestToast = setTimeout(() => {
+              registeringToast = new Toast("Registering your move…", null);
+            }, 1000);
 
             try {
               await this.api.addMove({
@@ -306,6 +311,11 @@ export class MainPage {
               console.error(e);
               new Toast("Failed to make move.");
               return false;
+            } finally {
+              if (registeringToast) {
+                registeringToast.hide();
+              }
+              clearTimeout(slowRequestToast);
             }
           },
         });

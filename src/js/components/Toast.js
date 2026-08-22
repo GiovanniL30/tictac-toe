@@ -2,23 +2,48 @@ export class Toast {
   constructor(message, duration = 3000) {
     this.container = document.querySelector("body");
 
-    const toast = document.createElement("div");
+    this.element = document.createElement("div");
+    this.element.textContent = message;
+    this.element.classList.add("toast");
 
-    toast.textContent = message;
-    toast.classList.add("toast");
+    this.container.append(this.element);
 
-    this.container.append(toast);
+    this.autoHideTimer = null;
+    this.isHidden = false;
 
     requestAnimationFrame(() => {
-      toast.classList.add("show");
+      this.element.classList.add("show");
     });
 
-    setTimeout(() => {
-      toast.classList.remove("show");
+    if (duration !== null && duration !== Infinity) {
+      this.autoHideTimer = setTimeout(() => this.hide(), duration);
+    }
+  }
 
-      toast.addEventListener("transitionend", () => toast.remove(), {
-        once: true,
-      });
-    }, duration);
+  updateMessage(message) {
+    this.element.textContent = message;
+  }
+
+  hide() {
+    if (this.isHidden) {
+      return;
+    }
+
+    this.isHidden = true;
+
+    if (this.autoHideTimer) {
+      clearTimeout(this.autoHideTimer);
+      this.autoHideTimer = null;
+    }
+
+    this.element.classList.remove("show");
+
+    this.element.addEventListener(
+      "transitionend",
+      () => {
+        this.element.remove();
+      },
+      { once: true },
+    );
   }
 }

@@ -25,6 +25,10 @@
   background: var(--lilac);
 }
 
+.chip.pending {
+  opacity: 0.45;
+}
+
 .chip.mini {
   width: 26px;
   height: 26px;
