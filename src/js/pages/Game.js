@@ -2,6 +2,7 @@ import { GameStorage } from "../state/GameStorage.js";
 import { Mascot } from "../components/Mascot.js";
 import { BackButton } from "../components/BackButton.js";
 import { Board } from "../components/Board.js";
+import { Poller } from "../utils/Poller.js";
 
 export class Game {
   constructor(props = {}) {
@@ -12,7 +13,7 @@ export class Game {
       onCellClick: this.props.onCellClick,
     });
 
-    this.polling = null;
+    this.poller = new Poller(() => this.checkBoard(), 500);
     this.storageListener = null;
 
     this.playerTurn = null;
@@ -269,19 +270,12 @@ export class Game {
   // POLLING
   startPolling() {
     this.checkBoard();
-
-    this.polling = setInterval(() => {
-      this.checkBoard();
-    }, 500);
+    this.poller.start();
   }
 
   stopPolling() {
-    if (this.polling) {
-      clearInterval(this.polling);
-      this.polling = null;
-    }
+    this.poller.stop();
   }
-
   async checkBoard() {
     try {
       const response = await this.props.onCheckBoard();

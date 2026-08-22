@@ -11,7 +11,7 @@ export class Poller {
   }
 
   stop() {
-    if (this.intervalId) {
+    if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
