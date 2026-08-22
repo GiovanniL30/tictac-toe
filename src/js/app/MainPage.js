@@ -49,7 +49,6 @@ export class MainPage {
     this.quitPoller = new Poller(this.checkOpponentPresence, QUIT_POLL_INTERVAL_MS);
     this.serverStatusPoller = new Poller(this.checkServerStatus, SERVER_POLL_INTERVAL_MS);
 
-    this.startServerStatusPolling();
     this.render();
   }
 
@@ -90,13 +89,16 @@ export class MainPage {
   createPage() {
     switch (this.gameState.pageState) {
       case GameState.PAGE_STATES.HOME:
-        return new Home({
+        const home = new Home({
           onCreateRoom: () => this.setState(GameState.PAGE_STATES.CREATE_ROOM),
           onJoinRoom: () => this.setState(GameState.PAGE_STATES.JOIN_ROOM),
         });
 
+        this.stopServerStatusPolling();
+        return home;
+
       case GameState.PAGE_STATES.CREATE_ROOM:
-        return new CreateRoom({
+        const createRoom = new CreateRoom({
           onBack: () => this.setState(GameState.PAGE_STATES.HOME),
           onRoomCreate: async (playerName) => {
             const key = generateCode();
@@ -126,8 +128,11 @@ export class MainPage {
           },
         });
 
+        this.startServerStatusPolling();
+        return createRoom;
+
       case GameState.PAGE_STATES.JOIN_ROOM:
-        return new JoinRoom({
+        const joinRoom = new JoinRoom({
           onBack: () => this.setState(GameState.PAGE_STATES.HOME),
           onJoin: async (key, playerName) => {
             const response = await this.api.createGame(key);
@@ -162,8 +167,11 @@ export class MainPage {
           },
         });
 
+        this.startServerStatusPolling();
+        return joinRoom;
+
       case GameState.PAGE_STATES.WAITING_ROOM:
-        return new WaitingRoom({
+        const waitingRoom = new WaitingRoom({
           key: this.gameState.key,
 
           onCheckRoom: () => {
@@ -189,6 +197,9 @@ export class MainPage {
           },
         });
 
+        this.startServerStatusPolling();
+        return waitingRoom;
+
       case GameState.PAGE_STATES.GAME_START: {
         const isSpectator = this.gameState.playerCode === PLAYER_ROLE.SPECTATOR;
 
@@ -202,8 +213,6 @@ export class MainPage {
           },
 
           onQuit: () => {
-            this.startQuitPolling();
-
             const modal = new ConfirmationModal({
               title: isSpectator ? "Stop spectating?" : "Are you sure you want to quit?",
 
@@ -226,8 +235,6 @@ export class MainPage {
           },
 
           onGameEnd: (winner) => {
-            this.startQuitPolling();
-
             const modal = new ResetGameModal({
               title: "Game Over!",
               winner,
@@ -281,6 +288,7 @@ export class MainPage {
 
         this.activeGame = game;
         this.startQuitPolling();
+        this.startServerStatusPolling();
 
         return game;
       }
@@ -394,9 +402,8 @@ export class MainPage {
       setTimeout(() => {
         this.waitForOpponent = false;
         this.dismissModal(waitModal);
+        this.setState(GameState.PAGE_STATES.GAME_START);
       }, OPPONENT_GRACE_PERIOD_MS + 250);
-
-      this.setState(GameState.PAGE_STATES.GAME_START);
     } catch (e) {
       console.error(e);
       new Toast("Failed to start a new game." + e);
@@ -450,6 +457,7 @@ export class MainPage {
         return;
       }
 
+      console.log("Register page exit");
       const key = this.gameState.key;
       this.api.resetGame(key, { keepalive: true }).catch((e) => console.error("Exit reset failed:", e));
       GameStorage.removeRoom(key);
@@ -486,7 +494,6 @@ export class MainPage {
   }
 
   // OPPONENT GRACE PERIOD
-
   startOpponentGracePeriod() {
     if (this.opponentGraceTimer) {
       return;
@@ -497,7 +504,9 @@ export class MainPage {
     this.stopQuitPolling();
     this.showReconnecting();
 
-    this.activeModal.disableButtons();
+    if (this.activeModal) {
+      this.activeModal.disableButtons();
+    }
 
     this.opponentGraceTimer = setTimeout(() => {
       this.opponentGraceTimer = null;
@@ -562,7 +571,6 @@ export class MainPage {
           this.closeActiveModal();
 
           this.setState(GameState.PAGE_STATES.GAME_START);
-          this.startQuitPolling();
           return;
         }
 
@@ -574,7 +582,7 @@ export class MainPage {
       const response = await this.api.createGame(gameKey);
       console.log("createGame response:", response);
 
-      if (response === PLAYER_ROLE.O) {
+      if (this.gameState.playerCode === PLAYER_ROLE.O && response === PLAYER_ROLE.O) {
         this.stopQuitPolling();
         this.stopOpponentGracePeriod();
 
@@ -626,7 +634,9 @@ export class MainPage {
       return;
     }
 
-    this.activeModal.hide();
+    if (this.activeModal) {
+      this.activeModal.hide();
+    }
 
     const modal = new ReconnectingModal({
       message: "Checking if the match is still live…",
@@ -696,7 +706,7 @@ export class MainPage {
       onDismiss: (modal) => {
         modal.hide();
         this.leaving = false;
-        this.startServerStatusPolling();
+        this.stopServerStatusPolling();
       },
     });
 

@@ -270,6 +270,7 @@ export class Game {
       Mascot.setResult(winner === "X" ? this.mascotO : this.mascotX, "cry");
     }
 
+    this.destroy();
     this.props.onGameEnd(winner, this);
   }
 
@@ -282,12 +283,12 @@ export class Game {
   stopPolling() {
     this.poller.stop();
   }
+
   async checkBoard() {
     try {
       const response = await this.props.onCheckBoard();
 
       this.updateBoard(response);
-      this.updateSpectatorCount();
     } catch (error) {
       console.error("Failed to synchronize board:", error);
     }
