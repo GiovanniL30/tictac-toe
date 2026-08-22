@@ -3,6 +3,7 @@ import { Mascot } from "../components/Mascot.js";
 import { BackButton } from "../components/BackButton.js";
 import { Board } from "../components/Board.js";
 import { Poller } from "../utils/Poller.js";
+import { PLAYER_ROLE } from "../utils/constants/PlayerRoles.js";
 
 export class Game {
   constructor(props = {}) {
@@ -35,7 +36,7 @@ export class Game {
     const gameBoard = this.board.render();
     const roomKey = this.generateGameKeyTag();
 
-    const quitGame = new BackButton(this.props.onQuit, this.props.player === "spectator" ? "Stop Spectating" : "Quit Game");
+    const quitGame = new BackButton(this.props.onQuit, this.props.player === PLAYER_ROLE.SPECTATOR ? "Stop Spectating" : "Quit Game");
 
     this.playerTurn = playerTurn;
     this.scoreboard = scoreboard;
@@ -44,7 +45,7 @@ export class Game {
 
     container.append(topbar, scoreboard, playerTurn, gameBoard, quitGame.element);
 
-    if (this.props.player === "spectator") {
+    if (this.props.player === PLAYER_ROLE.SPECTATOR) {
       const spectator = this.generateSpectatorBanner();
       container.append(spectator);
     }
@@ -101,7 +102,7 @@ export class Game {
     const players = GameStorage.getPlayers(this.props.key);
     const scores = GameStorage.getScores(this.props.key);
 
-    const order = this.props.player === "O" ? ["O", "X"] : ["X", "O"];
+    const order = this.props.player === PLAYER_ROLE.O ? [PLAYER_ROLE.O, PLAYER_ROLE.X] : [PLAYER_ROLE.X, PLAYER_ROLE.O];
 
     order.forEach((player, i) => {
       const card = document.createElement("div");
@@ -158,7 +159,7 @@ export class Game {
     const dogSlot = document.createElement("div");
 
     // Current player is always on the left (spectator defaults to X on the left)
-    const flipped = this.props.player === "O";
+    const flipped = this.props.player === PLAYER_ROLE.O;
 
     catSlot.classList.add(flipped ? "side-right" : "side-left");
     dogSlot.classList.add(flipped ? "side-left" : "side-right");
@@ -173,7 +174,7 @@ export class Game {
     text.classList.add("turn-text");
     this.playerTurnText = text;
 
-    if (this.props.player === "O") {
+    if (this.props.player === PLAYER_ROLE.O) {
       container.append(dogSlot, text, catSlot);
     } else {
       container.append(catSlot, text, dogSlot);
@@ -206,9 +207,9 @@ export class Game {
     }
 
     // Spectator
-    if (this.props.player === "spectator") {
-      Mascot.setTurn(this.mascotX, currentTurn === "X" ? "on" : "off");
-      Mascot.setTurn(this.mascotO, currentTurn === "O" ? "on" : "off");
+    if (this.props.player === PLAYER_ROLE.SPECTATOR) {
+      Mascot.setTurn(this.mascotX, currentTurn === PLAYER_ROLE.X ? "on" : "off");
+      Mascot.setTurn(this.mascotO, currentTurn === PLAYER_ROLE.O ? "on" : "off");
 
       this.playerTurnText.textContent = `${playerName}'s turn`;
 
@@ -217,8 +218,8 @@ export class Game {
 
     const isMyTurn = currentTurn === this.props.player;
 
-    Mascot.setTurn(this.mascotX, currentTurn === "X" ? "on" : "off");
-    Mascot.setTurn(this.mascotO, currentTurn === "O" ? "on" : "off");
+    Mascot.setTurn(this.mascotX, currentTurn === PLAYER_ROLE.X ? "on" : "off");
+    Mascot.setTurn(this.mascotO, currentTurn === PLAYER_ROLE.O ? "on" : "off");
 
     this.playerTurnText.textContent = isMyTurn ? "Your turn" : `Waiting for ${playerName}'s move`;
   }
@@ -246,7 +247,7 @@ export class Game {
     this.updatePlayerTurn(currentTurn);
 
     if (lastFilled && !this.gameOver) {
-      const host = lastFilled === "X" ? this.mascotX : this.mascotO;
+      const host = lastFilled === PLAYER_ROLE.X ? this.mascotX : this.mascotO;
       Mascot.place(host);
     }
   }
@@ -259,15 +260,17 @@ export class Game {
     if (winner !== "DRAW") {
       this.refreshScoreBoard();
 
-      GameStorage.incrementWin(this.props.key, winner);
+      if (this.props.player !== PLAYER_ROLE.SPECTATOR) {
+        GameStorage.incrementWin(this.props.key, winner);
+      }
     }
 
     if (winner === "DRAW") {
       Mascot.setResult(this.mascotX, "stare");
       Mascot.setResult(this.mascotO, "stare");
     } else {
-      Mascot.setResult(winner === "X" ? this.mascotX : this.mascotO, "slap");
-      Mascot.setResult(winner === "X" ? this.mascotO : this.mascotX, "cry");
+      Mascot.setResult(winner === PLAYER_ROLE.X ? this.mascotX : this.mascotO, "slap");
+      Mascot.setResult(winner === PLAYER_ROLE.X ? this.mascotO : this.mascotX, "cry");
     }
 
     this.destroy();

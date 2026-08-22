@@ -262,6 +262,12 @@ export class MainPage {
           },
 
           onCellClick: async (i) => {
+            const gameStatus = await this.api.checkGameStatus(this.gameState.key);
+
+            if (gameStatus == "false") {
+              return false;
+            }
+
             if (this.gameState.currentTurn !== this.gameState.playerCode) {
               return false;
             }
