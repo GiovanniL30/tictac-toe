@@ -157,6 +157,12 @@ export class Game {
     const catSlot = document.createElement("div");
     const dogSlot = document.createElement("div");
 
+    // Current player is always on the left (spectator defaults to X on the left)
+    const flipped = this.props.player === "O";
+
+    catSlot.classList.add(flipped ? "side-right" : "side-left");
+    dogSlot.classList.add(flipped ? "side-left" : "side-right");
+
     Mascot.mount(catSlot, "cat");
     Mascot.mount(dogSlot, "dog");
 
