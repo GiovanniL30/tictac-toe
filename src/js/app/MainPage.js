@@ -20,9 +20,9 @@ import { PLAYER_ROLE } from "../utils/constants/PlayerRoles.js";
 import { WaitForOpponentModal } from "../components/modal/WaitForOpponentModal.js";
 import { Modal } from "../components/modal/Modal.js";
 
-const QUIT_POLL_INTERVAL_MS = 300;
-const SERVER_POLL_INTERVAL_MS = 300;
-const OPPONENT_GRACE_PERIOD_MS = 1000;
+const QUIT_POLL_INTERVAL_MS = 1000;
+const SERVER_POLL_INTERVAL_MS = 1000;
+const OPPONENT_GRACE_PERIOD_MS = 1500;
 const SPECTATOR_RETURN_ATTEMPTS = 3;
 const SPECTATOR_RETURN_DELAY_MS = 500;
 const SERVER_HEALTH_CHECK_KEY = "1234";
