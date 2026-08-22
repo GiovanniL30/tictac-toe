@@ -149,25 +149,25 @@
   overflow: visible;
 }
 
-.vs-fighter.cat {
+.vs-fighter.left {
   left: 8%;
   transform: translate(-160%, -50%) rotate(-10deg);
 }
 
-.vs-fighter.dog {
+.vs-fighter.right {
   right: 8%;
   transform: translate(160%, -50%) rotate(10deg);
 }
 
-.vs-overlay.playing .vs-fighter.cat {
-  animation: vs-slide-cat 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+.vs-overlay.playing .vs-fighter.left {
+  animation: vs-slide-from-left 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
 }
 
-.vs-overlay.playing .vs-fighter.dog {
-  animation: vs-slide-dog 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+.vs-overlay.playing .vs-fighter.right {
+  animation: vs-slide-from-right 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
 }
 
-@keyframes vs-slide-cat {
+@keyframes vs-slide-from-left {
   0% {
     opacity: 0;
     transform: translate(-160%, -50%) rotate(-10deg);
@@ -185,7 +185,7 @@
   }
 }
 
-@keyframes vs-slide-dog {
+@keyframes vs-slide-from-right {
   0% {
     opacity: 0;
     transform: translate(160%, -50%) rotate(10deg);
@@ -223,16 +223,16 @@
   text-overflow: ellipsis;
 }
 
-.vs-nameplate.cat {
+.vs-nameplate.left {
   left: 8%;
 }
 
-.vs-nameplate.dog {
+.vs-nameplate.right {
   right: 8%;
 }
 
-.vs-overlay.playing .vs-nameplate.cat,
-.vs-overlay.playing .vs-nameplate.dog {
+.vs-overlay.playing .vs-nameplate.left,
+.vs-overlay.playing .vs-nameplate.right {
   animation: vs-drop-in 0.3s ease-out 0.62s forwards;
 }
 

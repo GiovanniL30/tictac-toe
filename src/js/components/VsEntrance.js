@@ -1,3 +1,4 @@
+import { PLAYER_ROLE } from "../utils/constants/PlayerRoles.js";
 import { loadSvg } from "../utils/svg.js";
 
 const svgKey = (type) => `./src/assets/icons/${type}-mascot.svg`;
@@ -6,10 +7,11 @@ const PLAY_DURATION = 1700;
 const EXIT_DURATION = 450;
 
 export class VsEntrance {
-  constructor({ playerX = "Player X", playerO = "Player O", onComplete } = {}) {
+  constructor({ playerX = "Player X", playerO = "Player O", onComplete, playerCode } = {}) {
     this.playerX = playerX;
     this.playerO = playerO;
     this.onComplete = onComplete;
+    this.playerCode = playerCode;
 
     this.exitTimer = null;
     this.removeTimer = null;
@@ -31,18 +33,20 @@ export class VsEntrance {
     const streakRight = document.createElement("div");
     streakRight.classList.add("vs-streak", "right");
 
+    const catOnLeft = this.playerCode === PLAYER_ROLE.X;
+
     const cat = document.createElement("div");
-    cat.classList.add("vs-fighter", "cat");
+    cat.classList.add("vs-fighter", catOnLeft ? "left" : "right");
 
     const dog = document.createElement("div");
-    dog.classList.add("vs-fighter", "dog");
+    dog.classList.add("vs-fighter", catOnLeft ? "right" : "left");
 
     const catPlate = document.createElement("div");
-    catPlate.classList.add("vs-nameplate", "cat");
+    catPlate.classList.add("vs-nameplate", catOnLeft ? "left" : "right");
     catPlate.textContent = this.playerX;
 
     const dogPlate = document.createElement("div");
-    dogPlate.classList.add("vs-nameplate", "dog");
+    dogPlate.classList.add("vs-nameplate", catOnLeft ? "right" : "left");
     dogPlate.textContent = this.playerO;
 
     const stamp = document.createElement("div");
@@ -53,16 +57,7 @@ export class VsEntrance {
     ready.classList.add("vs-ready");
     ready.textContent = "Game starting...";
 
-    stage.append(
-      streakLeft,
-      streakRight,
-      cat,
-      dog,
-      catPlate,
-      dogPlate,
-      stamp,
-      ready,
-    );
+    stage.append(streakLeft, streakRight, cat, dog, catPlate, dogPlate, stamp, ready);
 
     overlay.append(stage);
     this.el = overlay;
@@ -72,10 +67,7 @@ export class VsEntrance {
   }
 
   async show() {
-    const [catSvg, dogSvg] = await Promise.all([
-      loadSvg(svgKey("cat")),
-      loadSvg(svgKey("dog")),
-    ]);
+    const [catSvg, dogSvg] = await Promise.all([loadSvg(svgKey("cat")), loadSvg(svgKey("dog"))]);
 
     this.fighterCat.innerHTML = catSvg;
     this.fighterDog.innerHTML = dogSvg;

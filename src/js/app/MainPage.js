@@ -362,6 +362,7 @@ export class MainPage {
       onComplete: () => {
         this.vsEntrance = null;
       },
+      playerCode: this.gameState.playerCode,
     });
 
     this.vsEntrance.show();
