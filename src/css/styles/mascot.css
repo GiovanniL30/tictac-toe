@@ -15,8 +15,9 @@
   overflow: visible;
 }
 
-/* dog faces the board from the right side -> mirror it */
-.mascot.dog svg {
+/* the mascot on the right faces the board -> mirror it
+   (side-left / side-right is set by Game.js based on layout position) */
+.mascot.side-right svg {
   transform: scaleX(-1);
 }
 
@@ -38,18 +39,18 @@
 }
 
 /* arms stay hidden and only pop out while placing a tile
-   the dog's svg is mirrored (scaleX(-1)), so the same arm rotation
+   the right mascot's svg is mirrored (scaleX(-1)), so the same arm rotation
    automatically points it toward the board on its side. */
 .mascot.placing svg #arm {
   opacity: 1;
   transform: rotate(-30deg);
 }
 
-.mascot.cat.placing svg #body {
+.mascot.side-left.placing svg #body {
   transform: rotate(7deg) translateX(10px);
 }
 
-.mascot.dog.placing svg #body {
+.mascot.side-right.placing svg #body {
   transform: rotate(-7deg) translateX(-10px);
 }
 
@@ -72,11 +73,11 @@
   transform: rotate(-60deg);
 }
 
-.mascot.cat.slap {
+.mascot.side-left.slap {
   animation: slap-right 0.8s ease;
 }
 
-.mascot.dog.slap {
+.mascot.side-right.slap {
   animation: slap-left 0.8s ease;
 }
 
@@ -84,11 +85,11 @@
   transform: rotate(-6deg) translateY(6px);
 }
 
-.mascot.cat.cry {
+.mascot.side-left.cry {
   animation: cry-left 0.7s ease 0.4s forwards;
 }
 
-.mascot.dog.cry {
+.mascot.side-right.cry {
   animation: cry-right 0.7s ease 0.4s forwards;
 }
 
@@ -96,11 +97,11 @@
   transform: rotate(-2deg);
 }
 
-.mascot.cat.stare {
+.mascot.side-left.stare {
   animation: stare-right 2.2s ease-in-out infinite;
 }
 
-.mascot.dog.stare {
+.mascot.side-right.stare {
   animation: stare-left 2.2s ease-in-out infinite;
 }
 

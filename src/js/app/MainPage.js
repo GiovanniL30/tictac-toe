@@ -18,6 +18,7 @@ import { Confetti } from "../components/Confetti.js";
 import { VsEntrance } from "../components/VsEntrance.js";
 import { PLAYER_ROLE } from "../utils/constants/PlayerRoles.js";
 import { WaitForOpponentModal } from "../components/modal/WaitForOpponentModal.js";
+import { Modal } from "../components/modal/Modal.js";
 
 const QUIT_POLL_INTERVAL_MS = 300;
 const SERVER_POLL_INTERVAL_MS = 300;
@@ -393,7 +394,7 @@ export class MainPage {
       setTimeout(() => {
         this.waitForOpponent = false;
         this.dismissModal(waitModal);
-      }, OPPONENT_GRACE_PERIOD_MS);
+      }, OPPONENT_GRACE_PERIOD_MS + 250);
 
       this.setState(GameState.PAGE_STATES.GAME_START);
     } catch (e) {

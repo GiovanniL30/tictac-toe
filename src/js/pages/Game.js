@@ -2,6 +2,7 @@ import { GameStorage } from "../state/GameStorage.js";
 import { Mascot } from "../components/Mascot.js";
 import { BackButton } from "../components/BackButton.js";
 import { Board } from "../components/Board.js";
+import { Poller } from "../utils/Poller.js";
 
 export class Game {
   constructor(props = {}) {
@@ -12,7 +13,7 @@ export class Game {
       onCellClick: this.props.onCellClick,
     });
 
-    this.polling = null;
+    this.poller = new Poller(() => this.checkBoard(), 500);
     this.storageListener = null;
 
     this.playerTurn = null;
@@ -115,7 +116,7 @@ export class Game {
 
       const name = document.createElement("span");
       name.classList.add("name");
-      let playerName = players[player] ?? `Player ${this.props.player}`;
+      let playerName = players[player] ?? `Player ${order[i]}`;
 
       if (this.props.player === player) {
         playerName += " (You)";
@@ -155,6 +156,12 @@ export class Game {
 
     const catSlot = document.createElement("div");
     const dogSlot = document.createElement("div");
+
+    // Current player is always on the left (spectator defaults to X on the left)
+    const flipped = this.props.player === "O";
+
+    catSlot.classList.add(flipped ? "side-right" : "side-left");
+    dogSlot.classList.add(flipped ? "side-left" : "side-right");
 
     Mascot.mount(catSlot, "cat");
     Mascot.mount(dogSlot, "dog");
@@ -269,19 +276,12 @@ export class Game {
   // POLLING
   startPolling() {
     this.checkBoard();
-
-    this.polling = setInterval(() => {
-      this.checkBoard();
-    }, 500);
+    this.poller.start();
   }
 
   stopPolling() {
-    if (this.polling) {
-      clearInterval(this.polling);
-      this.polling = null;
-    }
+    this.poller.stop();
   }
-
   async checkBoard() {
     try {
       const response = await this.props.onCheckBoard();
