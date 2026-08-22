@@ -25,6 +25,8 @@ export class Game {
     this.lastWinner = null;
     this.gameStarted = false;
     this.quitting = false;
+
+    this.checkingBoard = false;
   }
 
   render() {
@@ -288,12 +290,19 @@ export class Game {
   }
 
   async checkBoard() {
+    if (this.checkingBoard) {
+      return;
+    }
+
     try {
+      this.checkingBoard = true;
       const response = await this.props.onCheckBoard();
 
       this.updateBoard(response);
     } catch (error) {
       console.error("Failed to synchronize board:", error);
+    } finally {
+      this.checkingBoard = false;
     }
   }
 

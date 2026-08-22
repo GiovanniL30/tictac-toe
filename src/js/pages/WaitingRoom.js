@@ -2,12 +2,40 @@ import { BackButton } from "../components/BackButton.js";
 import { Button } from "../components/Button.js";
 import { Toast } from "../components/Toast.js";
 import { createLoadingDots } from "../utils/index.js";
+import { Poller } from "../utils/Poller.js";
+
+const ROOM_CHECK_INTERVAL_MS = 500;
 
 export class WaitingRoom {
   constructor(props = {}) {
     this.props = props;
-    this.polling = null;
+    this.poller = new Poller(this.checkRoom, ROOM_CHECK_INTERVAL_MS);
+    this.isCheckingRoom = false;
+    this.gameStarted = false;
+    this.resetTimer = null;
   }
+
+  checkRoom = async () => {
+    if (this.isCheckingRoom || this.gameStarted) {
+      return;
+    }
+
+    this.isCheckingRoom = true;
+
+    try {
+      const response = await this.props.onCheckRoom();
+
+      if (response && response === "true" && !this.gameStarted) {
+        this.gameStarted = true;
+        this.stopPolling();
+        this.props.onGameStart();
+      }
+    } catch (e) {
+      console.error("Failed to check room:", e);
+    } finally {
+      this.isCheckingRoom = false;
+    }
+  };
 
   render() {
     const container = document.createElement("div");
@@ -30,24 +58,19 @@ export class WaitingRoom {
   }
 
   startPolling() {
-    this.polling = setInterval(async () => {
-      try {
-        const response = await this.props.onCheckRoom();
-
-        if (response && response == "true") {
-          this.stopPolling();
-          this.props.onGameStart();
-        }
-      } catch (e) {
-        console.error("Failed to check room:", e);
-      }
-    }, 300);
+    this.poller.start();
   }
 
   stopPolling() {
-    if (this.polling) {
-      clearInterval(this.polling);
-      this.polling = null;
+    this.poller.stop();
+  }
+
+  destroy() {
+    this.stopPolling();
+
+    if (this.resetTimer) {
+      clearTimeout(this.resetTimer);
+      this.resetTimer = null;
     }
   }
 

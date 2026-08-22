@@ -49,11 +49,20 @@ export class MainPage {
     this.quitPoller = new Poller(this.checkOpponentPresence, QUIT_POLL_INTERVAL_MS);
     this.serverStatusPoller = new Poller(this.checkServerStatus, SERVER_POLL_INTERVAL_MS);
 
+    this.isCheckingServerStatus = false;
+    this.isCheckingOpponentPresence = false;
+
     this.render();
   }
 
   checkOpponentPresence = async () => {
+    if (this.isCheckingOpponentPresence) {
+      return;
+    }
+
     try {
+      this.isCheckingOpponentPresence = true;
+
       const response = await this.api.checkGameStatus(this.gameState.key);
 
       if (response === "false") {
@@ -61,16 +70,25 @@ export class MainPage {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      this.isCheckingOpponentPresence = false;
     }
   };
 
   checkServerStatus = async () => {
+    if (this.isCheckingServerStatus) {
+      return;
+    }
+
     try {
+      this.isCheckingServerStatus = true;
       await this.api.checkGameStatus(SERVER_HEALTH_CHECK_KEY);
     } catch (e) {
       console.error("Server is down:", e);
       this.stopServerStatusPolling();
       this.handleServerDown();
+    } finally {
+      this.isCheckingServerStatus = false;
     }
   };
 
@@ -384,6 +402,10 @@ export class MainPage {
 
   async playAgain(modal) {
     if (this.gameState.playerCode !== PLAYER_ROLE.X) return;
+
+    if (modal && modal instanceof Modal) {
+      modal.disableButtons();
+    }
 
     const key = this.gameState.key;
 
