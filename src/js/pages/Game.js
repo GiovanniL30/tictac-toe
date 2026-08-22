@@ -116,7 +116,7 @@ export class Game {
 
       const name = document.createElement("span");
       name.classList.add("name");
-      let playerName = players[player] ?? `Player ${this.props.player}`;
+      let playerName = players[player] ?? `Player ${order[i]}`;
 
       if (this.props.player === player) {
         playerName += " (You)";

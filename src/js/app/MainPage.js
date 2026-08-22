@@ -394,7 +394,7 @@ export class MainPage {
       setTimeout(() => {
         this.waitForOpponent = false;
         this.dismissModal(waitModal);
-      }, OPPONENT_GRACE_PERIOD_MS);
+      }, OPPONENT_GRACE_PERIOD_MS + 250);
 
       this.setState(GameState.PAGE_STATES.GAME_START);
     } catch (e) {
