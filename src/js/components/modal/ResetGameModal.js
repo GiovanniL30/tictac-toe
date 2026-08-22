@@ -167,11 +167,4 @@ export class ResetGameModal extends Modal {
 
     return btnContainer;
   }
-
-  disableButtons() {
-    this.buttons?.forEach((button) => {
-      button.element.disabled = true;
-      button.element.style.display = "none";
-    });
-  }
 }

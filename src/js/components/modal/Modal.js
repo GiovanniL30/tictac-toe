@@ -22,4 +22,27 @@ export class Modal {
   hide() {
     this.overlay.remove();
   }
+
+  disableButtons() {
+    const buttons = this.modalContainer.querySelectorAll("button");
+
+    buttons.forEach((button) => {
+      if (button.dataset.prevDisplay === undefined) {
+        button.dataset.prevDisplay = button.style.display || "";
+      }
+
+      button.disabled = true;
+      button.style.display = "none";
+    });
+  }
+
+  enableButtons() {
+    const buttons = this.modalContainer.querySelectorAll("button");
+
+    buttons.forEach((button) => {
+      button.disabled = false;
+      button.style.display = button.dataset.prevDisplay ?? "";
+      delete button.dataset.prevDisplay;
+    });
+  }
 }

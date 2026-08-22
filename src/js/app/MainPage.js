@@ -103,6 +103,7 @@ export class MainPage {
               GameStorage.touchSpectator(key, this.gameState.spectatorId, playerName);
               this.registerPageExit();
               this.setState(GameState.PAGE_STATES.GAME_START);
+              this.startQuitPolling(key);
               new Toast("Game already started, joining as spectator.");
               return;
             }
@@ -179,6 +180,7 @@ export class MainPage {
               onCancel: (modal) => modal.hide(),
             });
 
+            this.activeModal = modal;
             modal.show();
           },
 
@@ -317,16 +319,6 @@ export class MainPage {
       this.activeModal = null;
       this.activeGame = null;
       modal.hide();
-
-      const waitModal = new Modal({ title: "Waiting for Player O to load..." });
-      waitModal.show();
-      waitModal.modalContainer.append(createLoadingDots());
-      waitModal.modalContainer.classList.add("center", "white");
-
-      setTimeout(() => {
-        waitModal.hide();
-      }, 1300);
-
       this.setState(GameState.PAGE_STATES.GAME_START);
     } catch (e) {
       console.error(e);
@@ -376,9 +368,7 @@ export class MainPage {
     this.destroyConfetti();
     this.destroyVsEntrance();
 
-    if (this.activeModal) {
-      this.activeModal.hide();
-    }
+    this.activeModal?.hide();
 
     this.stopQuitPolling();
     this.stopOpponentGracePeriod();
@@ -389,8 +379,6 @@ export class MainPage {
     this.leaving = true;
 
     GameStorage.removeRoom(this.gameState.key);
-
-    new Toast("The other player left the game.");
 
     this.gameState.clearSession();
     this.gameState.clearData();
@@ -454,58 +442,15 @@ export class MainPage {
 
     console.log("Starting opponent grace period...");
 
-    if (this.activeModal instanceof ResetGameModal) {
-      this.activeModal.disableButtons();
-    }
+    this.stopQuitPolling();
+    this.showReconnecting();
+
+    this.activeModal.disableButtons();
 
     this.opponentGraceTimer = setTimeout(() => {
       this.opponentGraceTimer = null;
-
       this.handleRestartOrQuit(gameKey);
-    }, 1300);
-  }
-
-  async handleRestartOrQuit(gameKey) {
-    try {
-      console.log("Checking if X restarted...");
-
-      const response = await this.api.createGame(gameKey);
-
-      console.log("createGame response:", response);
-
-      if (response === "O") {
-        // X restarted, so become O
-        this.stopQuitPolling();
-        this.stopOpponentGracePeriod();
-
-        this.activeGame?.destroy();
-
-        this.destroyConfetti();
-        this.destroyVsEntrance();
-
-        this.gameState.playerCode = "O";
-
-        GameStorage.setPlayer(gameKey, this.gameState.playerName, "O");
-
-        this.activeModal?.hide();
-
-        this.activeModal = null;
-        this.activeGame = null;
-
-        this.setState(GameState.PAGE_STATES.GAME_START);
-        return;
-      }
-
-      // createGame returned X
-      // Therefore the room was actually reset/abandoned.
-      console.log("Opponent actually quit.");
-
-      if (response === "X") {
-        this.handleOpponentQuit();
-      }
-    } catch (e) {
-      console.error("Failed to determine opponent status:", e);
-    }
+    }, 1000);
   }
 
   stopOpponentGracePeriod() {
@@ -513,6 +458,204 @@ export class MainPage {
       clearTimeout(this.opponentGraceTimer);
       this.opponentGraceTimer = null;
     }
+
+    this.hideReconnecting();
+  }
+
+  showReconnecting() {
+    this.activeModal.hide();
+    this.activeModal.disableButtons();
+
+    const modal = new Modal({ title: "Reconnecting…" });
+
+    modal.show();
+
+    modal.modalContainer.append(
+      Object.assign(document.createElement("p"), {
+        textContent: "Checking if your opponent is still there…",
+      }),
+    );
+
+    modal.modalContainer.append(createLoadingDots());
+    modal.modalContainer.classList.add("center", "white");
+
+    this.reconnectModal = modal;
+    this.activeModal = modal;
+  }
+
+  hideReconnecting() {
+    if (!this.reconnectModal) {
+      return;
+    }
+
+    this.reconnectModal.hide();
+
+    if (this.activeModal === this.reconnectModal) {
+      this.activeModal = null;
+    }
+
+    this.reconnectModal = null;
+  }
+
+  async handleRestartOrQuit(gameKey) {
+    const isSpectator = this.gameState.playerCode === "spectator";
+
+    try {
+      if (isSpectator) {
+        const status = await this.pollForSpectatorReturn(gameKey);
+
+        if (status === "true") {
+          this.stopQuitPolling();
+          this.stopOpponentGracePeriod();
+
+          this.activeGame?.destroy();
+          this.destroyConfetti();
+          this.destroyVsEntrance();
+
+          if (this.activeModal) {
+            this.activeModal.hide();
+            this.activeModal = null;
+          }
+
+          GameStorage.touchSpectator(gameKey, this.gameState.spectatorId, this.gameState.playerName);
+
+          this.setState(GameState.PAGE_STATES.GAME_START);
+          this.startQuitPolling(gameKey);
+          return;
+        }
+
+        console.log("Room still gone after retries. Ending spectate session.");
+        this.showPlayerLeftModal();
+        return;
+      }
+
+      const response = await this.api.createGame(gameKey);
+      console.log("createGame response:", response);
+
+      if (response === "O") {
+        this.stopQuitPolling();
+        this.stopOpponentGracePeriod();
+
+        this.activeGame?.destroy();
+        this.destroyConfetti();
+        this.destroyVsEntrance();
+
+        this.gameState.playerCode = "O";
+        GameStorage.setPlayer(gameKey, this.gameState.playerName, "O");
+
+        this.activeModal?.hide();
+        this.activeModal = null;
+        this.activeGame = null;
+
+        this.setState(GameState.PAGE_STATES.GAME_START);
+        return;
+      }
+
+      if (response === "X") {
+        console.log("Opponent actually quit.");
+        this.handleOpponentQuit();
+      }
+    } catch (e) {
+      console.error("Failed to determine opponent status:", e);
+    }
+  }
+
+  async pollForSpectatorReturn(gameKey, attempts = 3, delayMs = 500) {
+    this.showSpectatorReconnecting();
+
+    try {
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const status = await this.api.checkGameStatus(gameKey);
+
+          if (status === "true") {
+            return "true";
+          }
+        } catch (e) {}
+
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+
+      return "false";
+    } finally {
+      this.hideSpectatorReconnecting();
+    }
+  }
+
+  showSpectatorReconnecting() {
+    if (this.spectatorReconnectModal) {
+      return;
+    }
+
+    this.activeModal.hide();
+
+    const modal = new Modal({ title: "Reconnecting…" });
+
+    modal.show();
+
+    modal.modalContainer.append(
+      Object.assign(document.createElement("p"), {
+        textContent: "Checking if the match is still live…",
+      }),
+    );
+
+    modal.modalContainer.append(createLoadingDots());
+    modal.modalContainer.classList.add("center", "white");
+
+    this.spectatorReconnectModal = modal;
+    this.activeModal = modal;
+  }
+
+  hideSpectatorReconnecting() {
+    if (!this.spectatorReconnectModal) {
+      return;
+    }
+
+    this.spectatorReconnectModal.hide();
+
+    if (this.activeModal === this.spectatorReconnectModal) {
+      this.activeModal = null;
+    }
+
+    this.spectatorReconnectModal = null;
+  }
+
+  showPlayerLeftModal() {
+    this.stopQuitPolling();
+    this.stopOpponentGracePeriod();
+
+    if (this.activeGame) {
+      this.activeGame.destroy();
+      this.activeGame = null;
+    }
+
+    this.destroyConfetti();
+    this.destroyVsEntrance();
+
+    if (this.activeModal) {
+      this.activeModal.hide();
+      this.activeModal = null;
+    }
+
+    const isSpectator = this.gameState.playerCode === "spectator";
+
+    const modal = new Modal({
+      title: isSpectator ? "Game Ended" : "Opponent Left",
+    });
+
+    modal.show();
+
+    modal.modalContainer.append(
+      Object.assign(document.createElement("p"), {
+        textContent: isSpectator ? "A player left the game. Spectating has ended." : "The other player left the game.",
+      }),
+    );
+
+    modal.modalContainer.classList.add("center", "white");
+
+    this.activeModal = modal;
+
+    this.handleOpponentQuit();
   }
 
   startServerStatusPolling() {

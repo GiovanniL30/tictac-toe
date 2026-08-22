@@ -279,6 +279,7 @@ export class Game {
   handleGameEnd(winner) {
     this.gameOver = true;
     this.lastWinner = winner;
+    this.board.lock();
 
     if (winner !== "DRAW") {
       this.refreshScoreBoard();
