@@ -1,10 +1,8 @@
 export class GameStorage {
+  static scores = {};
+
   static getPlayersKey(roomKey) {
     return `tictactoe-players-${roomKey}`;
-  }
-
-  static getScoresKey(roomKey) {
-    return `tictactoe-scores-${roomKey}`;
   }
 
   // PLAYERS
@@ -58,29 +56,22 @@ export class GameStorage {
     localStorage.setItem(this.getPlayersKey(roomKey), JSON.stringify(players));
   }
 
-  // SCORES
+  // SCORES - MEMORY ONLY
   static createScores(roomKey) {
-    const scores = {
+    this.scores[roomKey] = {
       X: 0,
       O: 0,
     };
 
-    localStorage.setItem(this.getScoresKey(roomKey), JSON.stringify(scores));
-
-    return scores;
+    return this.scores[roomKey];
   }
 
   static getScores(roomKey) {
-    const data = localStorage.getItem(this.getScoresKey(roomKey));
-
-    if (!data) {
-      return {
-        X: 0,
-        O: 0,
-      };
+    if (!this.scores[roomKey]) {
+      this.createScores(roomKey);
     }
 
-    return JSON.parse(data);
+    return this.scores[roomKey];
   }
 
   static incrementWin(roomKey, player) {
@@ -92,79 +83,15 @@ export class GameStorage {
 
     scores[player]++;
 
-    localStorage.setItem(this.getScoresKey(roomKey), JSON.stringify(scores));
-
     return scores;
   }
 
   static removeScores(roomKey) {
-    localStorage.removeItem(this.getScoresKey(roomKey));
-  }
-
-  // SPECTATORS
-  static getSpectatorsKey(roomKey) {
-    return `tictactoe-spectators-${roomKey}`;
-  }
-
-  static getSpectators(roomKey) {
-    const data = localStorage.getItem(this.getSpectatorsKey(roomKey));
-
-    if (!data) {
-      return [];
-    }
-
-    return JSON.parse(data);
-  }
-
-  static saveSpectators(roomKey, spectators) {
-    localStorage.setItem(
-      this.getSpectatorsKey(roomKey),
-      JSON.stringify(spectators),
-    );
-  }
-
-  static touchSpectator(roomKey, spectatorId, playerName) {
-    const spectators = this.getSpectators(roomKey);
-    const existing = spectators.find((s) => s.id === spectatorId);
-
-    if (existing) {
-      existing.lastSeen = Date.now();
-    } else {
-      spectators.push({
-        id: spectatorId,
-        name: playerName ?? "Spectator",
-        lastSeen: Date.now(),
-      });
-    }
-
-    this.saveSpectators(roomKey, spectators);
-
-    return spectators;
-  }
-
-  static removeSpectator(roomKey, spectatorId) {
-    this.saveSpectators(
-      roomKey,
-      this.getSpectators(roomKey).filter((s) => s.id !== spectatorId),
-    );
-  }
-
-  static countSpectators(roomKey, maxAgeMs = 3000) {
-    const now = Date.now();
-    const spectators = this.getSpectators(roomKey).filter(
-      (s) => now - s.lastSeen < maxAgeMs,
-    );
-
-    if (spectators.length !== this.getSpectators(roomKey).length) {
-      this.saveSpectators(roomKey, spectators);
-    }
-
-    return spectators.length;
+    delete this.scores[roomKey];
   }
 
   static removeRoom(roomKey) {
-    localStorage.removeItem(this.getPlayersKey(roomKey));
-    localStorage.removeItem(this.getScoresKey(roomKey));
-    localStorage.removeItem(this.getSpectatorsKey(roomKey));
+    this.removePlayers(roomKey);
+    this.removeScores(roomKey);
   }
 }

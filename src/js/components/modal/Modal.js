@@ -8,10 +8,17 @@ export class Modal {
 
     this.overlay.append(this.modalContainer);
 
-    const modalTitle = document.createElement("h2");
-    modalTitle.textContent = title;
+    this.modalTitle = document.createElement("h2");
+    this.modalTitle.textContent = title;
 
-    this.modalContainer.append(modalTitle);
+    this.modalContainer.append(this.modalTitle);
+  }
+
+  setTitle(title) {
+    if (!document.querySelector(".modal h2")) {
+      this.modalTitle = title;
+      this.modalContainer.append(this.modalTitle);
+    }
   }
 
   show() {
@@ -21,5 +28,28 @@ export class Modal {
 
   hide() {
     this.overlay.remove();
+  }
+
+  disableButtons() {
+    const buttons = this.modalContainer.querySelectorAll("button");
+
+    buttons.forEach((button) => {
+      if (button.dataset.prevDisplay === undefined) {
+        button.dataset.prevDisplay = button.style.display || "";
+      }
+
+      button.disabled = true;
+      button.style.display = "none";
+    });
+  }
+
+  enableButtons() {
+    const buttons = this.modalContainer.querySelectorAll("button");
+
+    buttons.forEach((button) => {
+      button.disabled = false;
+      button.style.display = button.dataset.prevDisplay ?? "";
+      delete button.dataset.prevDisplay;
+    });
   }
 }
