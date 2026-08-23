@@ -90,7 +90,6 @@ export class MainPage {
       await this.api.checkGameStatus(SERVER_HEALTH_CHECK_KEY);
     } catch (e) {
       console.error("Server is down:", e);
-      this.stopServerStatusPolling();
       this.handleServerDown();
     } finally {
       this.isCheckingServerStatus = false;
