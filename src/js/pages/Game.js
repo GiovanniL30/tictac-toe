@@ -260,11 +260,8 @@ export class Game {
     this.board.lock();
 
     if (winner !== "DRAW") {
+      GameStorage.incrementWin(this.props.key, winner);
       this.refreshScoreBoard();
-
-      if (this.props.player !== PLAYER_ROLE.SPECTATOR) {
-        GameStorage.incrementWin(this.props.key, winner);
-      }
     }
 
     if (winner === "DRAW") {
