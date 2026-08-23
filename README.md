@@ -6,7 +6,7 @@ The client follows a layered controller driven design. There is no router librar
 index.html
    |
    v
-app.js  (bootstrap, duplicate tab guard)
+index.js  (bootstrap, duplicate tab guard)
    |
    v
 AppController  (controller, finite state machine, navigation + render effects)
@@ -21,7 +21,7 @@ AppController  (controller, finite state machine, navigation + render effects)
 
 ### Core Architectural Decisions
 
-1. Single controller pattern. `AppController` is instantiated once from `app.js` and lives for the entire tab session. It is the only public orchestrator: it owns navigation, page construction and render bound effects. Its supporting responsibilities are delegated to private collaborators wired through a shared context object: `ModalController` tracks the active dialog, `PollingController` owns the pollers, `SessionManager` handles persistence and page exit, `GameFlowController` handles quit, leave, play again and server down, and `ReconnectionManager` handles the opponent grace period. `AppController` remains the composition root and the only class pages talk to.
+1. Single controller pattern. `AppController` is instantiated once from `index.js` and lives for the entire tab session. It is the only public orchestrator: it owns navigation, page construction and render bound effects. Its supporting responsibilities are delegated to private collaborators wired through a shared context object: `ModalController` tracks the active dialog, `PollingController` owns the pollers, `SessionManager` handles persistence and page exit, `GameFlowController` handles quit, leave, play again and server down, and `ReconnectionManager` handles the opponent grace period. `AppController` remains the composition root and the only class pages talk to.
 
 2. Finite state machine navigation. `GameState.PAGE_STATES` defines five screens: `home`, `create-room`, `join-room`, `waiting-room` and `game-start`. Spectating is not a separate screen, it is a role inside `game-start`. Calling `setState` stores the new state and triggers a full rerender.
 
@@ -62,7 +62,7 @@ tictac-toe/
         game.css mascot.css room.css modal.css toast.css confetti.css vs.css
 
     js/
-      app.js                      Bootstrap: creates AppController, guards duplicate tabs
+      index.js                    Bootstrap: creates AppController, guards duplicate tabs
 
       app/
         AppController.js          Coordinator: routing, page construction, render effects
@@ -165,7 +165,7 @@ Returns nine colon separated cell values such as `X::O::::X:`. `Board.parse` spl
 
 ### Bootstrap
 
-`index.html` provides the `#app` mount point and loads the module entry `app.js`. That script instantiates `AppController`, then runs a duplicate tab guard. Because `sessionStorage` is shared across tabs of the same origin, two game tabs would otherwise fight over one identity. The guard writes a random name into `window.name` and sets an `IS_SESSION_ACTIVE` flag; a second tab without its own window name detects the collision and clears session storage before starting fresh.
+`index.html` provides the `#app` mount point and loads the module entry `index.js`. That script instantiates `AppController`, then runs a duplicate tab guard. Because `sessionStorage` is shared across tabs of the same origin, two game tabs would otherwise fight over one identity. The guard writes a random name into `window.name` and sets an `IS_SESSION_ACTIVE` flag; a second tab without its own window name detects the collision and clears session storage before starting fresh.
 
 `AppController` construction wires the API client, the game state, an opponent presence poller and a server health poller, then renders the first page. Neither poller is started in the constructor: server health polling is scoped to the pages that need the server (see the polling model below) and opponent presence polling starts only when a player or spectator actually enters a room.
 
