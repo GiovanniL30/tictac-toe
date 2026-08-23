@@ -12,6 +12,8 @@ export class Game {
     this.board = new Board({
       player: this.props.player,
       onCellClick: this.props.onCellClick,
+      onMoveStart: () => this.handleMoveStart(),
+      onMoveEnd: () => this.handleMoveEnd(),
     });
 
     this.poller = new Poller(() => this.checkBoard(), 500);
@@ -20,6 +22,7 @@ export class Game {
     this.playerTurn = null;
     this.scoreboard = null;
     this.spectatorsElement = null;
+    this.currentTurn = null;
 
     this.gameOver = false;
     this.lastWinner = null;
@@ -218,12 +221,37 @@ export class Game {
       return;
     }
 
+    // Move is still being registered
+    if (this.board.moveInFlight) {
+      Mascot.setTurn(this.mascotX, currentTurn === PLAYER_ROLE.X ? "on" : "off");
+      Mascot.setTurn(this.mascotO, currentTurn === PLAYER_ROLE.O ? "on" : "off");
+
+      this.playerTurnText.textContent = "Registering your move…";
+
+      return;
+    }
+
     const isMyTurn = currentTurn === this.props.player;
 
     Mascot.setTurn(this.mascotX, currentTurn === PLAYER_ROLE.X ? "on" : "off");
     Mascot.setTurn(this.mascotO, currentTurn === PLAYER_ROLE.O ? "on" : "off");
 
     this.playerTurnText.textContent = isMyTurn ? "Your turn" : `Waiting for ${playerName}'s move`;
+  }
+
+  refreshTurnState() {
+    const isMyTurn = this.props.player === this.currentTurn && !this.board.moveInFlight;
+
+    this.board.setHighlight(isMyTurn, this.currentTurn);
+    this.updatePlayerTurn(this.currentTurn);
+  }
+
+  handleMoveStart() {
+    this.refreshTurnState();
+  }
+
+  handleMoveEnd() {
+    this.refreshTurnState();
   }
 
   // BOARD SYNC
@@ -233,9 +261,9 @@ export class Game {
       gameOver: this.gameOver,
     });
 
-    this.props.onTurnChange(currentTurn);
+    this.currentTurn = currentTurn;
 
-    this.board.setHighlight(this.props.player === currentTurn, currentTurn);
+    this.props.onTurnChange(currentTurn);
 
     if (winner && !this.gameOver) {
       this.handleGameEnd(winner);
@@ -246,7 +274,7 @@ export class Game {
       this.lastWinner = null;
     }
 
-    this.updatePlayerTurn(currentTurn);
+    this.refreshTurnState();
 
     if (lastFilled && !this.gameOver) {
       const host = lastFilled === PLAYER_ROLE.X ? this.mascotX : this.mascotO;

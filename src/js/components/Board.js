@@ -7,6 +7,7 @@ export class Board {
 
     this.state = null; // array of 9 cell values ("X" | "O" | "" | undefined)
     this.moveInFlight = false;
+    this.pendingCellIndex = null;
   }
 
   // RENDER
@@ -37,15 +38,20 @@ export class Board {
         }
 
         this.moveInFlight = true;
+        this.pendingCellIndex = i;
         this.lock();
         this.showPendingMove(cell);
+        this.props.onMoveStart?.();
 
         this.props.onCellClick(i).then((ok) => {
           if (!ok) {
             this.moveInFlight = false;
+            this.pendingCellIndex = null;
             this.clearPendingMove(cell);
             this.unlock(this.isMyTurn());
           }
+
+          this.props.onMoveEnd?.(ok);
         });
       });
 
@@ -163,8 +169,9 @@ export class Board {
     const currentTurn = this.getCurrentTurn(board);
     const winner = this.getWinner(board);
 
-    if (this.moveInFlight && !gameOver && currentTurn !== player) {
+    if (this.moveInFlight && !gameOver && this.pendingCellIndex != null && (currentTurn !== player || this.state[this.pendingCellIndex] === player)) {
       this.moveInFlight = false;
+      this.pendingCellIndex = null;
     }
 
     const isMyTurn = !gameOver && !this.moveInFlight && currentTurn === player;
@@ -209,5 +216,6 @@ export class Board {
   reset() {
     this.state = null;
     this.moveInFlight = false;
+    this.pendingCellIndex = null;
   }
 }

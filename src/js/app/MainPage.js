@@ -422,6 +422,10 @@ export class MainPage {
   async playAgain(modal) {
     if (this.gameState.playerCode !== PLAYER_ROLE.X) return;
 
+    if (modal && modal instanceof Modal) {
+      modal.disableButtons();
+    }
+
     const key = this.gameState.key;
 
     const serverStatus = await this.api.checkGameStatus(key);
@@ -653,6 +657,12 @@ export class MainPage {
 
       // play again wait
       if (response == "wait") {
+        const waitModal = new WaitForOpponentModal();
+
+        this.closeActiveModal();
+        this.activeModal = waitModal;
+        waitModal.show();
+
         for (let i = 0; i < 3; i++) {
           gameStatus = await this.api.checkGameStatus(gameKey);
 
@@ -664,6 +674,8 @@ export class MainPage {
             await new Promise((resolve) => setTimeout(resolve, OPPONENT_GRACE_PERIOD_MS));
           }
         }
+
+        this.dismissModal(waitModal);
       }
 
       this.waitForOpponent = false;
