@@ -106,6 +106,7 @@ export class Game {
 
     const players = GameStorage.getPlayers(this.props.key);
     const scores = GameStorage.getScores(this.props.key);
+    const streaks = GameStorage.getStreaks(this.props.key);
 
     const order = this.props.player === PLAYER_ROLE.O ? [PLAYER_ROLE.O, PLAYER_ROLE.X] : [PLAYER_ROLE.X, PLAYER_ROLE.O];
 
@@ -138,6 +139,12 @@ export class Game {
       scoreInfo.append(name, wins);
 
       card.append(chip, scoreInfo);
+
+      const badge = this.createStreakBadge(streaks[player] ?? 0);
+      if (badge) {
+        card.append(badge);
+      }
+
       container.append(card);
 
       if (i === 0) {
@@ -153,6 +160,31 @@ export class Game {
     this.scoreboard.replaceWith(newScoreboard);
 
     this.scoreboard = newScoreboard;
+  }
+
+  createStreakBadge(streak) {
+    if (streak < 2) {
+      return null;
+    }
+
+    const badge = document.createElement("div");
+    badge.classList.add("streak-badge", "pop");
+    if (streak >= 3) {
+      badge.classList.add("hot");
+    }
+
+    const flame = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    flame.setAttribute("class", "flame");
+    flame.setAttribute("viewBox", "0 0 24 24");
+    flame.setAttribute("aria-hidden", "true");
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M12 2c1 3-2 4-2 7a4 4 0 108 0c0-1-1-2-1-2 2 1 3 3 3 5a6 6 0 11-12 0c0-4 3-5 4-10z");
+    path.setAttribute("fill", "currentColor");
+    flame.append(path);
+
+    badge.append(flame, document.createTextNode(streak));
+    return badge;
   }
 
   //PLAYER TURN
@@ -288,7 +320,12 @@ export class Game {
     this.board.lock();
 
     if (winner !== "DRAW") {
+      const loser = winner === PLAYER_ROLE.X ? PLAYER_ROLE.O : PLAYER_ROLE.X;
+
       GameStorage.incrementWin(this.props.key, winner);
+      GameStorage.incrementStreak(this.props.key, winner);
+      GameStorage.resetStreak(this.props.key, loser);
+
       this.refreshScoreBoard();
     }
 

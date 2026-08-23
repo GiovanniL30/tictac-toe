@@ -1,5 +1,6 @@
 export class GameStorage {
   static scores = {};
+  static streaks = {};
 
   static getPlayersKey(roomKey) {
     return `tictactoe-players-${roomKey}`;
@@ -90,8 +91,55 @@ export class GameStorage {
     delete this.scores[roomKey];
   }
 
+  // STREAKS - MEMORY ONLY
+  static createStreaks(roomKey) {
+    this.streaks[roomKey] = {
+      X: 0,
+      O: 0,
+    };
+
+    return this.streaks[roomKey];
+  }
+
+  static getStreaks(roomKey) {
+    if (!this.streaks[roomKey]) {
+      this.createStreaks(roomKey);
+    }
+
+    return this.streaks[roomKey];
+  }
+
+  static incrementStreak(roomKey, player) {
+    if (player !== "X" && player !== "O") {
+      return;
+    }
+
+    const streaks = this.getStreaks(roomKey);
+
+    streaks[player]++;
+
+    return streaks;
+  }
+
+  static resetStreak(roomKey, player) {
+    if (player !== "X" && player !== "O") {
+      return;
+    }
+
+    const streaks = this.getStreaks(roomKey);
+
+    streaks[player] = 0;
+
+    return streaks;
+  }
+
+  static removeStreaks(roomKey) {
+    delete this.streaks[roomKey];
+  }
+
   static removeRoom(roomKey) {
     this.removePlayers(roomKey);
     this.removeScores(roomKey);
+    this.removeStreaks(roomKey);
   }
 }
