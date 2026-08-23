@@ -1,6 +1,6 @@
-import { MainPage } from "./app/MainPage.js";
+import { AppController } from "./app/AppController.js";
 
-const app = new MainPage();
+const app = new AppController();
 
 const clearSessionOnTabDuplicate = () => {
   const hasExistingSession = sessionStorage.getItem("IS_SESSION_ACTIVE");

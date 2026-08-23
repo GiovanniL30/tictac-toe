@@ -21,7 +21,7 @@ import { PollingController } from "./PollingController.js";
 import { ReconnectionManager } from "./ReconnectionManager.js";
 import { SessionManager } from "../state/SessionManager.js";
 
-export class MainPage {
+export class AppController {
   constructor() {
     this.container = document.querySelector("#app");
     this.api = new TicTacToePayaraApi();
