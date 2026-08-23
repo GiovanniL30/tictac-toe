@@ -41,7 +41,7 @@ export class Board {
         this.pendingCellIndex = i;
         this.lock();
         this.showPendingMove(cell);
-        this.props.onMoveStart?.();
+        this.props.onMoveStart();
 
         this.props.onCellClick(i).then((ok) => {
           if (!ok) {
@@ -51,7 +51,7 @@ export class Board {
             this.unlock(this.isMyTurn());
           }
 
-          this.props.onMoveEnd?.(ok);
+          this.props.onMoveEnd(ok);
         });
       });
 

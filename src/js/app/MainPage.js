@@ -19,6 +19,7 @@ import { VsEntrance } from "../components/VsEntrance.js";
 import { PLAYER_ROLE } from "../utils/constants/PlayerRoles.js";
 import { WaitForOpponentModal } from "../components/modal/WaitForOpponentModal.js";
 import { Modal } from "../components/modal/Modal.js";
+import { IdleNudge } from "../components/IdleNudge.js";
 
 const QUIT_POLL_INTERVAL_MS = 1000;
 const SERVER_POLL_INTERVAL_MS = 1000;
@@ -37,6 +38,7 @@ export class MainPage {
     this.activeGame = null;
     this.confetti = null;
     this.vsEntrance = null;
+    this.idleNudge = null;
 
     this.leaving = false;
     this.pageExitHandler = null;
@@ -102,22 +104,35 @@ export class MainPage {
   }
 
   render() {
+    this.destroyIdleNudge();
     this.container.replaceChildren();
     const page = this.createPage();
 
     this.container.append(page.render());
   }
 
+  createHomePage() {
+    this.idleNudge = new IdleNudge({ delay: 1000 });
+    this.idleNudge.mount();
+
+    return new Home({
+      onCreateRoom: () => this.setState(GameState.PAGE_STATES.CREATE_ROOM),
+      onJoinRoom: () => this.setState(GameState.PAGE_STATES.JOIN_ROOM),
+    });
+  }
+
+  destroyIdleNudge() {
+    if (this.idleNudge) {
+      this.idleNudge.destroy();
+      this.idleNudge = null;
+    }
+  }
+
   createPage() {
     switch (this.gameState.pageState) {
       case GameState.PAGE_STATES.HOME:
-        const home = new Home({
-          onCreateRoom: () => this.setState(GameState.PAGE_STATES.CREATE_ROOM),
-          onJoinRoom: () => this.setState(GameState.PAGE_STATES.JOIN_ROOM),
-        });
-
         this.stopServerStatusPolling();
-        return home;
+        return this.createHomePage();
 
       case GameState.PAGE_STATES.CREATE_ROOM:
         const createRoom = new CreateRoom({
@@ -223,15 +238,10 @@ export class MainPage {
 
       case GameState.PAGE_STATES.GAME_START: {
         if (this.gameState.key == null) {
-          const home = new Home({
-            onCreateRoom: () => this.setState(GameState.PAGE_STATES.CREATE_ROOM),
-            onJoinRoom: () => this.setState(GameState.PAGE_STATES.JOIN_ROOM),
-          });
-
           this.stopQuitPolling();
           this.stopServerStatusPolling();
           new Toast("Failed to start, a opponent suddenly left the game.");
-          return home;
+          return this.createHomePage();
         }
 
         const isSpectator = this.gameState.playerCode === PLAYER_ROLE.SPECTATOR;

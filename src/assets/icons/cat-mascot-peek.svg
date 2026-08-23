@@ -1,0 +1,43 @@
+<svg viewBox="0 0 200 170" xmlns="http://www.w3.org/2000/svg">
+  <!-- CAT MASCOT (pink) peeking up to say hello -->
+  <!-- body peeking up from the bottom edge -->
+  <path d="M100,42 C132,38 162,58 169,86 C176,114 172,150 172,170 L28,170
+           C28,150 24,114 31,90 C38,60 68,46 100,42 Z"
+        fill="#FF5C8A" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- ears -->
+  <polygon points="72,68 42,24 92,58" fill="#FF5C8A" stroke="#17181A" stroke-width="7" stroke-linejoin="round"/>
+  <polygon points="70,60 55,36 82,55" fill="#FFD1DC"/>
+  <path d="M128,68 C120,52 120,34 134,24 C152,18 168,30 162,48 C157,62 142,68 128,68 Z"
+        fill="#FF5C8A" stroke="#17181A" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M130,60 C126,50 128,36 136,29 C143,24 151,30 148,40 C145,52 136,60 130,60 Z" fill="#FFD1DC"/>
+
+  <!-- eyes -->
+  <circle cx="78" cy="104" r="10" fill="#17181A"/>
+  <circle cx="81" cy="100" r="3.5" fill="#FFFFFF"/>
+  <circle cx="122" cy="104" r="10" fill="#17181A"/>
+  <circle cx="119" cy="100" r="3.5" fill="#FFFFFF"/>
+
+  <!-- blush -->
+  <ellipse cx="58" cy="126" rx="10" ry="7" fill="#E81E5B" opacity="0.35"/>
+  <ellipse cx="142" cy="126" rx="10" ry="7" fill="#E81E5B" opacity="0.35"/>
+
+  <!-- nose + mouth -->
+  <polygon points="94,120 106,120 100,129" fill="#17181A"/>
+  <path d="M100,129 Q100,136 92,138" fill="none" stroke="#17181A" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M100,129 Q100,136 108,138" fill="none" stroke="#17181A" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- whiskers -->
+  <line x1="58" y1="116" x2="28" y2="110" stroke="#17181A" stroke-width="3" stroke-linecap="round"/>
+  <line x1="58" y1="124" x2="26" y2="124" stroke="#17181A" stroke-width="3" stroke-linecap="round"/>
+  <line x1="58" y1="132" x2="28" y2="138" stroke="#17181A" stroke-width="3" stroke-linecap="round"/>
+  <line x1="142" y1="116" x2="172" y2="110" stroke="#17181A" stroke-width="3" stroke-linecap="round"/>
+  <line x1="142" y1="124" x2="174" y2="124" stroke="#17181A" stroke-width="3" stroke-linecap="round"/>
+  <line x1="142" y1="132" x2="172" y2="138" stroke="#17181A" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- waving paw -->
+  <g class="wave-arm">
+    <ellipse cx="30" cy="95" rx="15" ry="13" fill="#FF5C8A" stroke="#17181A" stroke-width="6"/>
+    <ellipse cx="26" cy="92" rx="2" ry="3" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+</svg>

@@ -1,0 +1,44 @@
+<svg viewBox="0 0 200 170" xmlns="http://www.w3.org/2000/svg">
+  <!-- DOG MASCOT (blue) peeking up to say hello -->
+  <!-- floppy ears -->
+  <path d="M40,60 C22,72 18,106 34,130 C42,142 58,136 58,116 C58,98 54,76 50,54 Z"
+        fill="#3AA6FF" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M160,60 C178,72 182,106 166,130 C158,142 142,136 142,116 C142,98 146,76 150,54 Z"
+        fill="#3AA6FF" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- body peeking up -->
+  <path d="M100,44 C134,40 164,58 172,86 C180,114 176,150 176,170 L24,170
+           C24,150 20,114 28,90 C36,58 66,48 100,44 Z"
+        fill="#3AA6FF" stroke="#17181A" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- muzzle -->
+  <ellipse cx="100" cy="134" rx="32" ry="24" fill="#FFF3DE" stroke="#17181A" stroke-width="6"/>
+
+  <!-- nose -->
+  <ellipse cx="100" cy="123" rx="11" ry="8" fill="#17181A"/>
+  <ellipse cx="96" cy="120" rx="2.5" ry="2" fill="#FFFFFF" opacity="0.7"/>
+
+  <!-- mouth -->
+  <path d="M100,131 L100,141" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+  <path d="M85,140 Q94,147 100,141" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+  <path d="M115,140 Q106,147 100,141" fill="none" stroke="#17181A" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- tongue -->
+  <path d="M93,142 Q93,162 100,162 Q107,162 107,142 Z" fill="#FF5C8A" stroke="#17181A" stroke-width="5" stroke-linejoin="round"/>
+
+  <!-- blush -->
+  <ellipse cx="62" cy="138" rx="11" ry="8" fill="#FF5C8A" opacity="0.45"/>
+  <ellipse cx="138" cy="138" rx="11" ry="8" fill="#FF5C8A" opacity="0.45"/>
+
+  <!-- eyes -->
+  <circle cx="70" cy="100" r="10" fill="#17181A"/>
+  <circle cx="73" cy="96" r="3.5" fill="#FFFFFF"/>
+  <circle cx="130" cy="100" r="10" fill="#17181A"/>
+  <circle cx="127" cy="96" r="3.5" fill="#FFFFFF"/>
+
+  <!-- waving paw -->
+  <g class="wave-arm">
+    <ellipse cx="30" cy="95" rx="15" ry="13" fill="#3AA6FF" stroke="#17181A" stroke-width="6"/>
+    <ellipse cx="26" cy="92" rx="2" ry="3" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+</svg>
