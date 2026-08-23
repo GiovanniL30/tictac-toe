@@ -14,14 +14,14 @@ MainPage  (controller, finite state machine, all API side effects)
    +-- Pages        Home, CreateRoom, JoinRoom, WaitingRoom, Game
    +-- Components   Button, Input, InputField, BackButton, Toast,
    |                Modal family, Board, Mascot, VsEntrance, Confetti
-   +-- Services     ApiClient, LocalHostApi
+   +-- Services     ApiClient, TicTacToePayaraApi
    +-- State        GameState, GameStorage
    +-- Utils        Poller, svg loader, generators, constants, exceptions
 ```
 
 ### Core Architectural Decisions
 
-1. Single controller pattern. `MainPage` is instantiated once from `app.js` and lives for the entire tab session. It is the only class that talks to the API, decides which page mounts next, manages modals, timers and pollers, and reacts to page exit events.
+1. Single controller pattern. `MainPage` is instantiated once from `app.js` and lives for the entire tab session. It is the only public orchestrator: it owns navigation, page construction and render bound effects. Its supporting responsibilities are delegated to private collaborators wired through a shared context object: `ModalController` tracks the active dialog, `PollingController` owns the pollers, `SessionManager` handles persistence and page exit, `GameFlowController` handles quit, leave, play again and server down, and `ReconnectionManager` handles the opponent grace period. `MainPage` remains the composition root and the only class pages talk to.
 
 2. Finite state machine navigation. `GameState.PAGE_STATES` defines five screens: `home`, `create-room`, `join-room`, `waiting-room` and `game-start`. Spectating is not a separate screen, it is a role inside `game-start`. Calling `setState` stores the new state and triggers a full rerender.
 
@@ -65,7 +65,11 @@ tictac-toe/
       app.js                      Bootstrap: creates MainPage, guards duplicate tabs
 
       app/
-        MainPage.js               Controller: routing, API effects, polling, lifecycle
+        MainPage.js               Coordinator: routing, page construction, render effects
+        ModalController.js        Tracks the active modal with show / hide / dismiss helpers
+        PollingController.js      Opponent presence and server health pollers
+        GameFlowController.js     Quit, leave, play again, opponent quit, server down
+        ReconnectionManager.js    Grace period, reconnect dialogs, spectator retry
 
       pages/
         Home.js                   Landing screen with mascots and mode selection
@@ -93,17 +97,19 @@ tictac-toe/
 
       services/
         ApiClient.js              Fetch wrapper with error normalization
-        LocalHostApi.js           Concrete endpoints for the tic tac toe server
+        TicTacToePayaraApi.js     Concrete endpoints for the Payara tic tac toe server
 
       state/
         GameState.js              Session identity and current page state
         GameStorage.js            Room rosters in localStorage, scores in memory
+        SessionManager.js         Session persistence and page exit handlers
 
       utils/
         Poller.js                 Interval wrapper with idempotent start, stop, isRunning
         svg.js                    fetch plus Map cache for SVG assets
         index.js                  generateCode, createLoadingDots, createPlayerNote
         constants/PlayerRoles.js  PLAYER_ROLE = X, O, spectator
+        constants/RoomStatus.js   ROOM_STATUS = "true" / "false" / "wait"
         exceptions/RoomNotFoundError.js  Control flow signal for bad room codes
 ```
 
@@ -171,8 +177,8 @@ All realtime behavior is poller driven, and every poller is guarded against conc
 | ------------------ | -------- | -------------- | ------------------------ | ------------------------------------------------------------------ |
 | Board sync         | 500 ms   | Game page      | `checkingBoard`          | Read `/board`, diff cells, derive turn / winner / draw             |
 | Room check         | 500 ms   | WaitingRoom    | `isCheckingRoom` + `gameStarted` | Start the match once `/check` answers `"true"`              |
-| Opponent presence  | 1 s      | MainPage       | `isCheckingOpponentPresence` | Detect `"false"` and begin the grace period                    |
-| Server health      | 1 s      | MainPage       | `isCheckingServerStatus` | Probe with a dummy key; failure triggers the server down path      |
+| Opponent presence  | 1 s      | PollingController | `isCheckingOpponentPresence` | Detect `"false"` and begin the grace period                    |
+| Server health      | 1 s      | PollingController | `isCheckingServerStatus` | Probe with a dummy key; failure triggers the server down path      |
 
 Two of these are page-scoped by the controller. The server health poller is started while Create Room, Join Room, Waiting Room or Game is mounted and stopped on Home, so a static landing screen never wastes requests. The opponent presence poller is started exactly once when a game (or spectator session) mounts and stopped on every exit path and takeover, and it is deliberately not restarted from callbacks such as the quit confirmation or the game over dialog, because those callbacks now run while the poller is already alive. It survives a match ending on purpose: Player O keeps polling after the game over dialog so that X's Play Again handoff is detected through the presence path. It is only paused temporarily while X shows the Wait for Opponent dialog during Play Again.
 

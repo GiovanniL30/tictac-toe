@@ -3,6 +3,7 @@ import { Button } from "../components/Button.js";
 import { Toast } from "../components/Toast.js";
 import { createLoadingDots } from "../utils/index.js";
 import { Poller } from "../utils/Poller.js";
+import { ROOM_STATUS } from "../utils/constants/RoomStatus.js";
 
 const ROOM_CHECK_INTERVAL_MS = 500;
 
@@ -25,7 +26,7 @@ export class WaitingRoom {
     try {
       const response = await this.props.onCheckRoom();
 
-      if (response && response === "true" && !this.gameStarted) {
+      if (response === ROOM_STATUS.ACTIVE && !this.gameStarted) {
         this.gameStarted = true;
         this.stopPolling();
         this.props.onGameStart();
