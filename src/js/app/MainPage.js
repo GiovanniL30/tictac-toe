@@ -145,7 +145,6 @@ export class MainPage {
               this.setState(GameState.PAGE_STATES.WAITING_ROOM);
               new Toast("Created a new room.");
             } catch (e) {
-              this.api.request(key);
               new Toast("Failed to create new room: " + e);
             }
           },

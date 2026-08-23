@@ -16,9 +16,9 @@ export class JoinRoom {
     container.classList.add("join-room-container");
 
     const form = this.createForm();
-    const backButton = new BackButton(() => this.props.onBack());
+    this.backButton = new BackButton(() => this.props.onBack());
 
-    container.append(form, backButton.element);
+    container.append(form, this.backButton.element);
     return container;
   }
 
@@ -39,19 +39,19 @@ export class JoinRoom {
     const form = document.createElement("form");
     form.classList.add("card");
 
-    const nameField = new InputField({
+    this.nameField = new InputField({
       label: "Your Name",
       id: "playerName",
       placeholder: "e.g. Gio",
     });
 
-    nameField.onInputChange(() => {
-      if (nameField.getInputValue().length >= 3) {
+    this.nameField.onInputChange(() => {
+      if (this.nameField.getInputValue().length >= 3) {
         clearError(nameError);
       }
     });
 
-    const roomCodeField = new InputField({
+    this.roomCodeField = new InputField({
       label: "Room Code",
       id: "roomCode",
       placeholder: "",
@@ -59,8 +59,8 @@ export class JoinRoom {
       maxLength: 4,
     });
 
-    roomCodeField.onInputChange(() => {
-      if (roomCodeField.getInputValue().length === 4) {
+    this.roomCodeField.onInputChange(() => {
+      if (this.roomCodeField.getInputValue().length === 4) {
         clearError(codeError);
       }
     });
@@ -75,9 +75,9 @@ export class JoinRoom {
 
     form.append(
       createPlayerNote("O", "2"),
-      nameField.element,
+      this.nameField.element,
       nameError,
-      roomCodeField.element,
+      this.roomCodeField.element,
       codeError,
       joinRoomBtn.element,
     );
@@ -85,8 +85,8 @@ export class JoinRoom {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const name = nameField.getInputValue().trim();
-      const roomCode = roomCodeField.getInputValue().trim().toUpperCase();
+      const name = this.nameField.getInputValue().trim();
+      const roomCode = this.roomCodeField.getInputValue().trim().toUpperCase();
 
       clearError(nameError);
       clearError(codeError);
@@ -104,6 +104,9 @@ export class JoinRoom {
       try {
         joinRoomBtn.disabled = true;
         joinRoomBtn.text = "Joining Room...";
+        this.backButton.element.disabled = true;
+        this.nameField.input.element.disabled = true;
+        this.roomCodeField.input.element.disabled = true;
 
         await this.props.onJoin(roomCode, name);
       } catch (error) {
@@ -117,6 +120,9 @@ export class JoinRoom {
       } finally {
         joinRoomBtn.disabled = false;
         joinRoomBtn.text = "Join Room";
+        this.backButton.element.disabled = false;
+        this.nameField.input.element.disabled = false;
+        this.roomCodeField.input.element.disabled = false;
       }
     });
 
