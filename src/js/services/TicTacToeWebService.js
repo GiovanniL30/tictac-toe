@@ -6,14 +6,35 @@ export class TicTacToeWebService extends ApiClient {
   }
 
   saveMove(body) {
-    return this.post("/v1/game/save", body);
+    return this.post("/v1/game/save", body, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
   }
 
   listGameMoves(gameId) {
-    return this.get(`/v1/game/${gameId}`);
+    return this.get(`/v1/game/${gameId}`, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
   }
 
   listPlayerGames(playerId) {
-    return this.get(`/v1/list-games/${playerId}`);
+    return this.get(`/v1/list-games/${playerId}`, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+  }
+
+  getAllGames() {
+    return this.get("/v1/games", {
+      headers: {
+        Accept: "application/json",
+      },
+    });
   }
 }
