@@ -10,6 +10,9 @@ export class ApiClient {
       ...options,
       headers: {
         ...options.headers,
+        ...(options.body && {
+          "Content-Type": "application/json",
+        }),
       },
     });
 
@@ -40,6 +43,14 @@ export class ApiClient {
     return this.request(path, {
       ...options,
       method: "GET",
+    });
+  }
+
+  post(path, body, options = {}) {
+    return this.request(path, {
+      ...options,
+      method: "POST",
+      body: JSON.stringify(body),
     });
   }
 }
