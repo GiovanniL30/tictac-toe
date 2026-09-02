@@ -46,12 +46,14 @@ export class Game {
 
     const topbar = this.generateTopbar(roomKey, this.createQuitButton());
 
-    container.append(topbar, scoreboard, playerTurn, gameBoard);
+    container.append(topbar, scoreboard);
 
     if (this.props.player === PLAYER_ROLE.SPECTATOR) {
       const spectator = this.generateSpectatorBanner();
       container.append(spectator);
     }
+
+    container.append(playerTurn, gameBoard);
 
     this.startStorageListener();
     this.startPolling();
