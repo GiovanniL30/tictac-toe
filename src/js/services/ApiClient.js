@@ -9,7 +9,9 @@ export class ApiClient {
     const response = await fetch(url, options);
 
     if (!response.ok) {
-      const error = new Error(`API Error: ${response.status} ${response.statusText}`);
+      const error = new Error(
+        `API Error: ${response.status} ${response.statusText}`,
+      );
 
       error.status = response.status;
 
@@ -41,6 +43,21 @@ export class ApiClient {
       ...options,
       method: "POST",
       body: JSON.stringify(body),
+    });
+  }
+
+  patch(path, body, options = {}) {
+    return this.request(path, {
+      ...options,
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+  }
+
+  delete(path, options = {}) {
+    return this.request(path, {
+      ...options,
+      method: "DELETE",
     });
   }
 }
