@@ -2,7 +2,6 @@ import { ReconnectingModal } from "../components/modal/ReconnectingModal.js";
 import { WaitForOpponentModal } from "../components/modal/WaitForOpponentModal.js";
 import { Modal } from "../components/modal/Modal.js";
 import { GameState } from "../state/GameState.js";
-import { GameStorage } from "../state/GameStorage.js";
 import { PLAYER_ROLE } from "../utils/constants/PlayerRoles.js";
 import { ROOM_STATUS } from "../utils/constants/RoomStatus.js";
 
@@ -115,7 +114,6 @@ export class ReconnectionManager {
         this.context.modals.closeActive();
 
         this.context.gameState.playerCode = PLAYER_ROLE.O;
-        GameStorage.setPlayer(gameKey, this.context.gameState.playerName, PLAYER_ROLE.O);
 
         this.context.setState(GameState.PAGE_STATES.GAME_START);
         return;

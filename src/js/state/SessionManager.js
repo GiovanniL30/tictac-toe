@@ -1,5 +1,4 @@
 import { PLAYER_ROLE } from "../utils/constants/PlayerRoles.js";
-import { GameStorage } from "./GameStorage.js";
 
 export class SessionManager {
   constructor(context) {
@@ -12,11 +11,6 @@ export class SessionManager {
     this.context.gameState.gameId = gameId;
     this.context.gameState.playerCode = playerCode;
     this.context.gameState.playerName = playerName;
-    this.context.gameState.saveSession();
-
-    console.log(this.context.gameState);
-
-    GameStorage.createPlayers(key, playerName, playerCode);
   }
 
   saveJoinedRoom(key, gameId, playerName, playerCode) {
@@ -24,16 +18,9 @@ export class SessionManager {
     this.context.gameState.gameId = gameId;
     this.context.gameState.playerName = playerName;
     this.context.gameState.playerCode = playerCode;
-
-    GameStorage.setPlayer(key, playerName, playerCode);
-    this.context.gameState.saveSession();
   }
 
-  clearRoomAndSession(shouldRemoveRoom) {
-    if (shouldRemoveRoom && this.context.gameState.key) {
-      GameStorage.removeRoom(this.context.gameState.key);
-    }
-
+  clearRoomAndSession() {
     this.context.gameState.clearSession();
   }
 
@@ -49,7 +36,6 @@ export class SessionManager {
       this.context.api
         .resetGame(key, { keepalive: true })
         .catch((e) => console.error("Exit reset failed:", e));
-      GameStorage.removeRoom(key);
       this.context.gameState.clearSession();
     };
 

@@ -1,10 +1,9 @@
-import { GameStorage } from "../../state/GameStorage.js";
 import { createLoadingDots } from "../../utils/index.js";
 import { Button } from "../Button.js";
 import { Modal } from "./Modal.js";
 
 export class ResetGameModal extends Modal {
-  constructor({ title, winner, player, isSpectator, key, onPlayAgain, onSpectatorLeave, onSpectatorStay, onQuitGame }) {
+  constructor({ title, winner, player, isSpectator, winnerName, onPlayAgain, onSpectatorLeave, onSpectatorStay, onQuitGame }) {
     super({ title });
 
     this.player = player;
@@ -15,8 +14,6 @@ export class ResetGameModal extends Modal {
     this.onSpectatorStay = onSpectatorStay;
     this.onQuitGame = onQuitGame;
 
-    const players = GameStorage.getPlayers(key);
-
     let message;
     let imgSrc = null;
     let drawMascots = false;
@@ -25,8 +22,8 @@ export class ResetGameModal extends Modal {
       if (winner === "DRAW") {
         message = "It's a Draw!";
       } else {
-        const winnerName = players[winner] ?? `Player ${winner}`;
-        message = `${winnerName} Wins!`;
+        const winnerDisplayName = winnerName ?? `Player ${winner}`;
+        message = `${winnerDisplayName} Wins!`;
       }
     } else if (winner === "DRAW") {
       this.modalContainer.classList.add("blue");

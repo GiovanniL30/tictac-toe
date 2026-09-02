@@ -31,6 +31,12 @@ export class GameFlowController {
     const isPlayer =
       this.context.gameState.playerCode === PLAYER_ROLE.X || this.context.gameState.playerCode === PLAYER_ROLE.O;
 
+    if (isPlayer && this.context.gameState.key) {
+      this.context.webserviceApi
+        .deleteGame(this.context.gameState.key)
+        .catch(() => {});
+    }
+
     this.context.session.clearRoomAndSession(isPlayer);
     this.context.session.deregisterPageExit();
 
@@ -40,6 +46,8 @@ export class GameFlowController {
   }
 
   handleOpponentQuit() {
+    const key = this.context.gameState.key;
+
     this.context.teardownActiveGame();
     this.context.modals.closeActive();
 
@@ -48,6 +56,10 @@ export class GameFlowController {
 
     this.context.leaving = true;
     this.context.session.clearRoomAndSession(true);
+
+    if (key) {
+      this.context.webserviceApi.deleteGame(key).catch(() => {});
+    }
 
     new Toast("A player left the game. Exiting...");
 
@@ -87,6 +99,9 @@ export class GameFlowController {
         throw new Error(`Expected X but received ${response}`);
       }
 
+      const regenerated = await this.context.webserviceApi.regenerateGameUUID(key);
+      this.context.gameState.gameId = regenerated.gameKey.gameId;
+
       this.context.modals.hide(modal);
 
       const waitModal = new WaitForOpponentModal();
@@ -108,12 +123,18 @@ export class GameFlowController {
       return;
     }
 
+    const key = this.context.gameState.key;
+
     this.context.modals.closeActive();
     this.context.teardownActiveGame();
     this.context.polling.stopQuitPolling();
 
     this.context.leaving = true;
-    this.context.session.clearRoomAndSession(Boolean(this.context.gameState.key));
+    this.context.session.clearRoomAndSession(Boolean(key));
+
+    if (key) {
+      this.context.webserviceApi.deleteGame(key).catch(() => {});
+    }
 
     this.context.setState(GameState.PAGE_STATES.HOME);
 

@@ -11,7 +11,6 @@ import { JoinRoom } from "../pages/JoinRoom.js";
 import { WaitingRoom } from "../pages/WaitingRoom.js";
 import { TicTacToePayaraApi } from "../services/TicTacToePayaraApi.js";
 import { GameState } from "../state/GameState.js";
-import { GameStorage } from "../state/GameStorage.js";
 import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
 import { PLAYER_ROLE } from "../utils/constants/PlayerRoles.js";
 import { GameFlowController } from "./GameFlowController.js";
@@ -36,6 +35,7 @@ export class AppController {
 
     this.context = {
       api: this.api,
+      webserviceApi: this.webserviceApi,
       gameState: this.gameState,
       leaving: false,
       waitForOpponent: false,
@@ -184,6 +184,10 @@ export class AppController {
         return this.api.checkBoardStatus(this.gameState.key);
       },
 
+      onFetchPlayers: () => {
+        return this.webserviceApi.getPlayersOnTheGame(this.gameState.key);
+      },
+
       onQuit: () => this.onQuit(isSpectator),
 
       onTurnChange: (currentTurn) => {
@@ -264,6 +268,7 @@ export class AppController {
     if (response !== PLAYER_ROLE.O) {
       this.gameState.playerCode = PLAYER_ROLE.SPECTATOR;
       this.gameState.spectatorId = crypto.randomUUID();
+      this.gameState.gameId = gameId;
 
       this.context.session.registerPageExit();
       this.setState(GameState.PAGE_STATES.GAME_START);
@@ -302,13 +307,35 @@ export class AppController {
     this.context.modals.show(modal);
   }
 
-  onGameEnd(winner, isSpectator) {
+  onGameEnd = async (winner, isSpectator) => {
+    if (!isSpectator && winner !== "DRAW" && winner === this.gameState.playerCode) {
+      await this.webserviceApi
+        .addPlayerScore({
+          playerid: this.gameState.playerName,
+          roomcode: this.gameState.key,
+          symbol: winner,
+        })
+        .catch((e) => console.error("Failed to persist score:", e));
+    }
+
+    let winnerName = null;
+
+    if (winner !== "DRAW") {
+      try {
+        const data = await this.webserviceApi.getPlayersOnTheGame(this.gameState.key);
+        const entry = (data.players ?? []).find((player) => player.symbol === winner);
+        winnerName = entry?.playerId ?? null;
+      } catch (e) {
+        console.error("Failed to fetch players:", e);
+      }
+    }
+
     const modal = new ResetGameModal({
       title: "Game Over!",
       winner,
       player: this.gameState.playerCode,
       isSpectator,
-      key: this.gameState.key,
+      winnerName,
 
       onPlayAgain: (modal) => this.context.gameFlow.playAgain(modal),
       onSpectatorLeave: (modal) => this.context.gameFlow.leaveGame(modal),
@@ -327,7 +354,7 @@ export class AppController {
         modal.show();
       }
     }, 1200);
-  }
+  };
 
   onCellClick = async (i) => {
     if (this.gameState.currentTurn !== this.gameState.playerCode) {
@@ -402,14 +429,29 @@ export class AppController {
   }
 
   // VS ENTRANCE
-  playVsEntrance() {
+  async playVsEntrance() {
     this.destroyVsEntrance();
 
-    const players = GameStorage.getPlayers(this.gameState.key);
+    let playerX = "Player X";
+    let playerO = "Player O";
+
+    try {
+      const data = await this.webserviceApi.getPlayersOnTheGame(this.gameState.key);
+
+      for (const player of data.players ?? []) {
+        if (player.symbol === PLAYER_ROLE.X) {
+          playerX = player.playerId;
+        } else if (player.symbol === PLAYER_ROLE.O) {
+          playerO = player.playerId;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch players for VS entrance:", e);
+    }
 
     this.vsEntrance = new VsEntrance({
-      playerX: players.X ?? "Player X",
-      playerO: players.O ?? "Player O",
+      playerX,
+      playerO,
       onComplete: () => {
         this.vsEntrance = null;
       },

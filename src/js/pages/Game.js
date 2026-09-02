@@ -1,4 +1,3 @@
-import { GameStorage } from "../state/GameStorage.js";
 import { Mascot } from "../components/Mascot.js";
 import { Board } from "../components/Board.js";
 import { Poller } from "../utils/Poller.js";
@@ -17,7 +16,7 @@ export class Game {
     });
 
     this.poller = new Poller(() => this.checkBoard(), 500);
-    this.storageListener = null;
+    this.playersPoller = new Poller(() => this.checkPlayers(), 1000);
 
     this.playerTurn = null;
     this.scoreboard = null;
@@ -30,6 +29,9 @@ export class Game {
     this.quitting = false;
 
     this.checkingBoard = false;
+    this.checkingPlayers = false;
+    this.playersData = [];
+    this.playersSnapshot = "";
   }
 
   render() {
@@ -55,8 +57,8 @@ export class Game {
 
     container.append(playerTurn, gameBoard);
 
-    this.startStorageListener();
     this.startPolling();
+    this.startPlayersPolling();
 
     return container;
   }
@@ -114,6 +116,10 @@ export class Game {
   }
 
   // SCOREBOARD
+  getPlayerEntry(symbol) {
+    return this.playersData.find((player) => player.symbol === symbol) ?? null;
+  }
+
   generateScoreBoard() {
     const container = document.createElement("div");
     container.classList.add("scoreboard");
@@ -122,13 +128,11 @@ export class Game {
     vsBadge.classList.add("vs-badge");
     vsBadge.textContent = "vs";
 
-    const players = GameStorage.getPlayers(this.props.key);
-    const scores = GameStorage.getScores(this.props.key);
-    const streaks = GameStorage.getStreaks(this.props.key);
-
     const order = this.props.player === PLAYER_ROLE.O ? [PLAYER_ROLE.O, PLAYER_ROLE.X] : [PLAYER_ROLE.X, PLAYER_ROLE.O];
 
     order.forEach((player, i) => {
+      const entry = this.getPlayerEntry(player);
+
       const card = document.createElement("div");
       card.classList.add("score-card");
 
@@ -141,7 +145,7 @@ export class Game {
 
       const name = document.createElement("span");
       name.classList.add("name");
-      let playerName = players[player] ?? `Player ${order[i]}`;
+      let playerName = entry?.playerId ?? `Player ${player}`;
 
       if (this.props.player === player) {
         playerName += " (You)";
@@ -152,13 +156,13 @@ export class Game {
 
       const wins = document.createElement("span");
       wins.classList.add("wins");
-      wins.textContent = scores[player] ?? 0;
+      wins.textContent = entry?.score ?? 0;
 
       scoreInfo.append(name, wins);
 
       card.append(chip, scoreInfo);
 
-      const badge = this.createStreakBadge(streaks[player] ?? 0);
+      const badge = this.createStreakBadge(entry?.streakCount ?? 0);
       if (badge) {
         card.append(badge);
       }
@@ -239,8 +243,7 @@ export class Game {
   }
 
   updatePlayerTurn(currentTurn) {
-    const players = GameStorage.getPlayers(this.props.key);
-    const playerName = players[currentTurn] ?? `Player ${currentTurn}`;
+    const playerName = this.getPlayerEntry(currentTurn)?.playerId ?? `Player ${currentTurn}`;
 
     this.playerTurn.className = "turn-indicator";
     this.playerTurn.classList.add(currentTurn.toLowerCase());
@@ -337,16 +340,6 @@ export class Game {
     this.lastWinner = winner;
     this.board.lock();
 
-    if (winner !== "DRAW") {
-      const loser = winner === PLAYER_ROLE.X ? PLAYER_ROLE.O : PLAYER_ROLE.X;
-
-      GameStorage.incrementWin(this.props.key, winner);
-      GameStorage.incrementStreak(this.props.key, winner);
-      GameStorage.resetStreak(this.props.key, loser);
-
-      this.refreshScoreBoard();
-    }
-
     if (winner === "DRAW") {
       Mascot.setResult(this.mascotX, "stare");
       Mascot.setResult(this.mascotO, "stare");
@@ -355,7 +348,7 @@ export class Game {
       Mascot.setResult(winner === PLAYER_ROLE.X ? this.mascotO : this.mascotX, "cry");
     }
 
-    this.destroy();
+    this.stopPolling();
     this.props.onGameEnd(winner, this);
   }
 
@@ -367,6 +360,48 @@ export class Game {
 
   stopPolling() {
     this.poller.stop();
+  }
+
+  startPlayersPolling() {
+    this.checkPlayers();
+    this.playersPoller.start();
+  }
+
+  stopPlayersPolling() {
+    this.playersPoller.stop();
+  }
+
+  async checkPlayers() {
+    if (this.checkingPlayers) {
+      return;
+    }
+
+    this.checkingPlayers = true;
+
+    try {
+      const data = await this.props.onFetchPlayers();
+      const players = data?.players ?? [];
+      const snapshot = JSON.stringify(
+        players
+          .map((player) => ({
+            symbol: player.symbol,
+            playerId: player.playerId,
+            score: player.score,
+            streakCount: player.streakCount,
+          }))
+          .sort((a, b) => a.symbol.localeCompare(b.symbol)),
+      );
+
+      if (snapshot !== this.playersSnapshot) {
+        this.playersSnapshot = snapshot;
+        this.playersData = players;
+        this.refreshScoreBoard();
+      }
+    } catch (error) {
+      console.error("Failed to fetch players:", error);
+    } finally {
+      this.checkingPlayers = false;
+    }
   }
 
   async checkBoard() {
@@ -386,28 +421,9 @@ export class Game {
     }
   }
 
-  // LOCAL STORAGE SYNC
-  startStorageListener() {
-    this.storageListener = (event) => {
-      if (event.key === GameStorage.getPlayersKey(this.props.key)) {
-        this.refreshScoreBoard();
-      }
-    };
-
-    window.addEventListener("storage", this.storageListener);
-  }
-
-  stopStorageListener() {
-    if (this.storageListener) {
-      window.removeEventListener("storage", this.storageListener);
-
-      this.storageListener = null;
-    }
-  }
-
   //CLEAN UP
   destroy() {
     this.stopPolling();
-    this.stopStorageListener();
+    this.stopPlayersPolling();
   }
 }
