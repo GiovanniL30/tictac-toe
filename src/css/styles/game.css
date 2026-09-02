@@ -36,6 +36,29 @@
   border-left: 2px solid var(--ink);
 }
 
+.game-topbar .quit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-left: 2px solid var(--ink);
+  padding: 0 0 0 10px;
+  margin: 0;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.game-topbar .quit-btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.game-topbar .quit-btn:hover {
+  color: var(--pink);
+}
+
 .game-topbar p {
   margin: 0;
   white-space: nowrap;

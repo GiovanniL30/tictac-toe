@@ -1,8 +1,8 @@
 import { GameStorage } from "../state/GameStorage.js";
 import { Mascot } from "../components/Mascot.js";
-import { BackButton } from "../components/BackButton.js";
 import { Board } from "../components/Board.js";
 import { Poller } from "../utils/Poller.js";
+import { loadSvg } from "../utils/svg.js";
 import { PLAYER_ROLE } from "../utils/constants/PlayerRoles.js";
 
 export class Game {
@@ -41,14 +41,12 @@ export class Game {
     const gameBoard = this.board.render();
     const roomKey = this.generateGameKeyTag();
 
-    const quitGame = new BackButton(this.props.onQuit, this.props.player === PLAYER_ROLE.SPECTATOR ? "Stop Spectating" : "Quit Game");
-
     this.playerTurn = playerTurn;
     this.scoreboard = scoreboard;
 
-    const topbar = this.generateTopbar(roomKey);
+    const topbar = this.generateTopbar(roomKey, this.createQuitButton());
 
-    container.append(topbar, scoreboard, playerTurn, gameBoard, quitGame.element);
+    container.append(topbar, scoreboard, playerTurn, gameBoard);
 
     if (this.props.player === PLAYER_ROLE.SPECTATOR) {
       const spectator = this.generateSpectatorBanner();
@@ -77,13 +75,31 @@ export class Game {
     return container;
   }
 
-  generateTopbar(roomTag) {
+  generateTopbar(roomTag, quitButton) {
     const topbar = document.createElement("div");
     topbar.classList.add("game-topbar");
 
-    topbar.append(roomTag);
+    topbar.append(roomTag, quitButton);
 
     return topbar;
+  }
+
+  createQuitButton() {
+    const label = this.props.player === PLAYER_ROLE.SPECTATOR ? "Stop Spectating" : "Quit Game";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.classList.add("quit-btn");
+    button.setAttribute("aria-label", label);
+    button.setAttribute("title", label);
+
+    loadSvg("./src/assets/icons/quit.svg").then((svg) => {
+      button.innerHTML = svg;
+    });
+
+    button.addEventListener("click", this.props.onQuit);
+
+    return button;
   }
 
   // SPECTATOR BANNER
