@@ -7,17 +7,21 @@ export class SessionManager {
     this.pageExitHandler = null;
   }
 
-  saveNewRoom(key, playerCode, playerName) {
+  saveNewRoom(key, gameId, playerCode, playerName) {
     this.context.gameState.key = key;
+    this.context.gameState.gameId = gameId;
     this.context.gameState.playerCode = playerCode;
     this.context.gameState.playerName = playerName;
     this.context.gameState.saveSession();
 
+    console.log(this.context.gameState);
+
     GameStorage.createPlayers(key, playerName, playerCode);
   }
 
-  saveJoinedRoom(key, playerName, playerCode) {
+  saveJoinedRoom(key, gameId, playerName, playerCode) {
     this.context.gameState.key = key;
+    this.context.gameState.gameId = gameId;
     this.context.gameState.playerName = playerName;
     this.context.gameState.playerCode = playerCode;
 
@@ -42,7 +46,9 @@ export class SessionManager {
       }
 
       console.log("Register page exit");
-      this.context.api.resetGame(key, { keepalive: true }).catch((e) => console.error("Exit reset failed:", e));
+      this.context.api
+        .resetGame(key, { keepalive: true })
+        .catch((e) => console.error("Exit reset failed:", e));
       GameStorage.removeRoom(key);
       this.context.gameState.clearSession();
     };

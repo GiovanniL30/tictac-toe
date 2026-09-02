@@ -12,7 +12,6 @@ import { WaitingRoom } from "../pages/WaitingRoom.js";
 import { TicTacToePayaraApi } from "../services/TicTacToePayaraApi.js";
 import { GameState } from "../state/GameState.js";
 import { GameStorage } from "../state/GameStorage.js";
-import { generateCode } from "../utils/index.js";
 import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
 import { PLAYER_ROLE } from "../utils/constants/PlayerRoles.js";
 import { GameFlowController } from "./GameFlowController.js";
@@ -20,11 +19,13 @@ import { ModalController } from "./ModalController.js";
 import { PollingController } from "./PollingController.js";
 import { ReconnectionManager } from "./ReconnectionManager.js";
 import { SessionManager } from "../state/SessionManager.js";
+import { TicTacToeWebService } from "../services/TicTacToeWebService.js";
 
 export class AppController {
   constructor() {
     this.container = document.querySelector("#app");
     this.api = new TicTacToePayaraApi();
+    this.webserviceApi = new TicTacToeWebService();
     this.gameState = new GameState();
 
     this.activeGame = null;
@@ -51,8 +52,8 @@ export class AppController {
     this.context.setState = (pageState) => this.setState(pageState);
     this.context.teardownActiveGame = () => this.teardownActiveGame();
     this.context.playVsEntrance = () => this.playVsEntrance();
-    this.context.celebrateWinner = (winner, modal) => this.celebrateWinner(winner, modal);
-
+    this.context.celebrateWinner = (winner, modal) =>
+      this.celebrateWinner(winner, modal);
     this.context.modals = new ModalController();
     this.context.session = new SessionManager(this.context);
     this.context.polling = new PollingController(this.context);
@@ -144,8 +145,13 @@ export class AppController {
       onBack: async () => {
         try {
           await this.api.resetGame(this.gameState.key);
-        } catch (e) {}
+          await this.webserviceApi.deleteGame(this.gameState.key);
+        } catch (e) {
+          console.log(e);
+        }
 
+        this.context.polling.stopServerStatusPolling();
+        this.context.polling.stopQuitPolling();
         this.context.leaving = true;
         this.context.session.clearRoomAndSession(true);
 
@@ -195,16 +201,28 @@ export class AppController {
   }
 
   onRoomCreate = async (playerName) => {
-    const key = generateCode();
+    console.log(playerName);
 
     try {
+      const gameKey = await this.webserviceApi.generateRoomKey();
+      const key = gameKey.gameKey.roomCode;
+      const gameId = gameKey.gameKey.gameId;
+
+      await this.webserviceApi.addPlayer(
+        {
+          playerid: playerName,
+          symbol: PLAYER_ROLE.X,
+        },
+        key,
+      );
+
       const response = await this.api.createGame(key);
 
       if (response !== PLAYER_ROLE.X) {
         throw new Error(`Game key ${key} already exists`);
       }
 
-      this.context.session.saveNewRoom(key, response, playerName);
+      this.context.session.saveNewRoom(key, gameId, response, playerName);
       this.context.session.registerPageExit();
 
       this.setState(GameState.PAGE_STATES.WAITING_ROOM);
@@ -215,6 +233,23 @@ export class AppController {
   };
 
   onJoin = async (key, playerName) => {
+    const gameKey = await this.webserviceApi.getRoomUUID(key);
+    const gameId = gameKey.gameKey.gameId;
+
+    try {
+      const players = await this.webserviceApi.getPlayersOnTheGame(key);
+
+      if (players.players.length < 2) {
+        await this.webserviceApi.addPlayer(
+          { playerid: playerName, symbol: PLAYER_ROLE.O },
+          key,
+        );
+      }
+    } catch (e) {
+      new Toast(e.message);
+      return;
+    }
+
     const response = await this.api.createGame(key);
 
     if (response === PLAYER_ROLE.X) {
@@ -236,8 +271,7 @@ export class AppController {
       return;
     }
 
-    this.context.session.saveJoinedRoom(key, playerName, response);
-
+    this.context.session.saveJoinedRoom(key, gameId, playerName, response);
     this.context.session.registerPageExit();
     this.context.polling.startQuitPolling();
 
@@ -247,7 +281,9 @@ export class AppController {
 
   onQuit(isSpectator) {
     const modal = new ConfirmationModal({
-      title: isSpectator ? "Stop spectating?" : "Are you sure you want to quit?",
+      title: isSpectator
+        ? "Stop spectating?"
+        : "Are you sure you want to quit?",
 
       message: isSpectator
         ? "You will stop watching the game and return to the home screen."
@@ -255,7 +291,10 @@ export class AppController {
 
       confirmText: isSpectator ? "Stop Spectating" : "Quit Game",
       cancelText: "Cancel",
-      onConfirm: (modal) => (isSpectator ? this.context.gameFlow.leaveGame(modal) : this.context.gameFlow.quitGame(modal)),
+      onConfirm: (modal) =>
+        isSpectator
+          ? this.context.gameFlow.leaveGame(modal)
+          : this.context.gameFlow.quitGame(modal),
       onCancel: (modal) => modal.hide(),
     });
 

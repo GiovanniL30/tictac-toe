@@ -95,4 +95,20 @@ export class TicTacToeWebService extends ApiClient {
       },
     });
   }
+
+  generateRoomKey() {
+    return this.get("/v1/data/game-key/generate", {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+  }
+
+  getRoomUUID(gameCode) {
+    return this.get(`/v1/data/game-key/${gameCode}`, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+  }
 }

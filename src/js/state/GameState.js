@@ -10,6 +10,7 @@ export class GameState {
 
   constructor() {
     this.key = null;
+    this.gameId = null;
     this.playerCode = null;
     this.playerName = null;
     this.spectatorId = null;
@@ -62,6 +63,7 @@ export class GameState {
 
   clearData() {
     this.key = null;
+    this.gameId = null;
     this.playerCode = null;
     this.playerName = null;
     this.spectatorId = null;

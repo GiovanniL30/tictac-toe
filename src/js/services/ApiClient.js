@@ -5,15 +5,25 @@ export class ApiClient {
 
   async request(path, options = {}) {
     const url = `${this.baseUrl}${path}`;
-
     const response = await fetch(url, options);
 
     if (!response.ok) {
+      const contentType = response.headers.get("content-type");
+
+      let data;
+
+      if (contentType?.includes("application/json")) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
+
       const error = new Error(
-        `API Error: ${response.status} ${response.statusText}`,
+        data?.msg || `API Error: ${response.status} ${response.statusText}`,
       );
 
       error.status = response.status;
+      error.data = data;
 
       throw error;
     }

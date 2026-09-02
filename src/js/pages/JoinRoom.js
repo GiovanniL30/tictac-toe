@@ -115,7 +115,7 @@ export class JoinRoom {
           showError(codeError, message);
           new Toast(message);
         } else {
-          new Toast("Failed to join the room.");
+          new Toast(error.message || "Failed to join the room");
         }
       } finally {
         joinRoomBtn.disabled = false;
