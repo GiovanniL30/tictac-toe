@@ -19,6 +19,27 @@
   flex-direction: column;
   gap: 10px;
   width: 100%;
+  max-height: min(70vh, 540px);
+  padding: 4px 12px 4px 4px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink) transparent;
+}
+
+.list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.list::-webkit-scrollbar-thumb {
+  background: var(--ink);
+  border-radius: 999px;
 }
 
 .history-loading {
