@@ -20,6 +20,7 @@ import { PollingController } from "./PollingController.js";
 import { ReconnectionManager } from "./ReconnectionManager.js";
 import { SessionManager } from "../state/SessionManager.js";
 import { TicTacToeWebService } from "../services/TicTacToeWebService.js";
+import { getCurrentDateTime } from "../utils/index.js";
 
 export class AppController {
   constructor() {
@@ -348,6 +349,15 @@ export class AppController {
         tile: this.gameState.playerCode,
         x,
         y,
+      });
+
+      await this.webserviceApi.saveMove({
+        gameid: this.gameState.gameId,
+        roomcode: this.gameState.key,
+        symbol: this.gameState.playerCode,
+        location: i,
+        playerid: this.gameState.playerName,
+        datesave: getCurrentDateTime(),
       });
 
       return true;

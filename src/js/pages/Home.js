@@ -25,7 +25,7 @@ export class Home {
     const buttons = this.createActionButtons();
     const howToPlayBtn = this.createHowToPlayButton();
 
-    contents.append(header, buttons, howToPlayBtn);
+    contents.append(header, buttons);
     container.append(contents);
 
     return container;
@@ -35,13 +35,22 @@ export class Home {
     const btnContainers = document.createElement("div");
     btnContainers.classList.add("btn-row");
 
+    const allBtnContainers = document.createElement("div");
+    allBtnContainers.classList.add("home-btns");
+
     const createRoomBtn = new Button({
       text: "CREATE A ROOM",
       variant: "blue",
     });
+
     const joinRoomBtn = new Button({
       text: "JOIN A ROOM",
       variant: "secondary",
+    });
+
+    const watchHistoryBtn = new Button({
+      text: "View Match History",
+      variant: "ghost",
     });
 
     createRoomBtn.onClick(() => {
@@ -53,8 +62,9 @@ export class Home {
     });
 
     btnContainers.append(joinRoomBtn.element, createRoomBtn.element);
+    allBtnContainers.append(btnContainers, watchHistoryBtn.element);
 
-    return btnContainers;
+    return allBtnContainers;
   }
 
   createHowToPlayButton() {
@@ -102,7 +112,7 @@ export class Home {
     tagline.textContent = "grab a friend, share a code, play";
     tagline.classList.add("tagline", "yellow");
 
-    headerContainer.append(mascotRow, tictactoeContainer, tagline);
+    headerContainer.append(mascotRow, tictactoeContainer);
 
     return headerContainer;
   }

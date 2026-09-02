@@ -120,6 +120,14 @@
   animation: fadeUp2 0.5s ease-out 0.85s backwards;
 }
 
+.home-btns {
+  margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: btnPop 0.45s ease-out 0.65s backwards;
+}
+
 @keyframes dropBounce {
   0% {
     opacity: 0;
