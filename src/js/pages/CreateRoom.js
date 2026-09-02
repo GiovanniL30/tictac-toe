@@ -12,15 +12,14 @@ export class CreateRoom {
     const container = document.createElement("div");
     container.classList.add("create-room-container");
 
-    this.backButton = new BackButton(() => this.props.onBack());
-    this.nameField = new InputField({
-      label: "Your Name",
-      id: "playerName",
-      placeholder: "e.g. Gio",
-    });
-    const form = this.createForm();
+    const contents = document.createElement("div");
+    contents.classList.add("create-room-contents");
 
-    container.append(form, this.backButton.element);
+    const form = this.createForm();
+    this.backButton = new BackButton(() => this.props.onBack());
+
+    contents.append(this.backButton.element, form);
+    container.append(contents);
     return container;
   }
 
@@ -40,6 +39,12 @@ export class CreateRoom {
 
     const form = document.createElement("form");
     form.classList.add("card");
+
+    this.nameField = new InputField({
+      label: "Your Name",
+      id: "playerName",
+      placeholder: "e.g. Gio",
+    });
 
     this.nameField.onInputChange(() => {
       if (this.nameField.getInputValue().length >= 3) {

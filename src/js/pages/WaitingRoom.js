@@ -1,4 +1,3 @@
-import { BackButton } from "../components/BackButton.js";
 import { Button } from "../components/Button.js";
 import { Toast } from "../components/Toast.js";
 import { createLoadingDots } from "../utils/index.js";
@@ -47,9 +46,10 @@ export class WaitingRoom {
 
     const taglines = this.createTagLines();
     const loadingDots = createLoadingDots();
-    const backButton = new BackButton(() => this.props.onBack(), "Cancel Room");
+    const cancelBtn = new Button({ text: "Cancel Room", variant: "ghost" });
+    cancelBtn.onClick(() => this.props.onBack());
 
-    content.append(taglines[0], codePlate, loadingDots, taglines[1], backButton.element);
+    content.append(taglines[0], codePlate, loadingDots, taglines[1], cancelBtn.element);
 
     container.append(content);
 

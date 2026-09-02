@@ -15,10 +15,14 @@ export class JoinRoom {
     const container = document.createElement("div");
     container.classList.add("join-room-container");
 
+    const contents = document.createElement("div");
+    contents.classList.add("join-room-contents");
+
     const form = this.createForm();
     this.backButton = new BackButton(() => this.props.onBack());
 
-    container.append(form, this.backButton.element);
+    contents.append(this.backButton.element, form);
+    container.append(contents);
     return container;
   }
 

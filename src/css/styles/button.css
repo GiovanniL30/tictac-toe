@@ -85,6 +85,18 @@
   margin-top: 14px;
 }
 
+.back-btn-container {
+  display: flex;
+  gap: 10px;
+}
+
+.back-sm {
+  padding: 5px 15px;
+  font-size: 0.8rem;
+  border-width: 3px;
+  box-shadow: var(--shadow-sm);
+}
+
 .how-btn {
   margin-top: 25px;
   width: fit-content;
