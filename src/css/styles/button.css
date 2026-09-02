@@ -73,18 +73,6 @@
   border-color: #fff;
 }
 
-.link-btn {
-  background: none;
-  border: none;
-  text-decoration: underline;
-  font-family: "Space Grotesk";
-  font-weight: 600;
-  color: var(--ink);
-  cursor: pointer;
-  font-size: 0.9rem;
-  margin-top: 14px;
-}
-
 .back-btn-container {
   display: flex;
   align-items: center;
@@ -118,10 +106,4 @@
   font-weight: 900;
   font-size: 1.05rem;
   margin: 0;
-}
-
-.how-btn {
-  margin-top: 25px;
-  width: fit-content;
-  margin-inline: auto;
 }

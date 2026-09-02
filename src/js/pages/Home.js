@@ -23,7 +23,6 @@ export class Home {
 
     const header = this.createHeader();
     const buttons = this.createActionButtons();
-    const howToPlayBtn = this.createHowToPlayButton();
 
     contents.append(header, buttons);
     container.append(contents);
@@ -73,8 +72,10 @@ export class Home {
 
   createHowToPlayButton() {
     const btn = document.createElement("button");
-    btn.textContent = "How to play?";
-    btn.classList.add("sm", "link-btn", "how-btn");
+    btn.type = "button";
+    btn.classList.add("how-to-play-fab");
+    btn.textContent = "?";
+    btn.setAttribute("aria-label", "How to play");
 
     btn.addEventListener("click", () => {
       new HowToPlayModal().show();
@@ -110,7 +111,7 @@ export class Home {
       titleH1.append(span);
     }
 
-    tictactoeContainer.append(titleH1);
+    tictactoeContainer.append(titleH1, this.createHowToPlayButton());
 
     const tagline = document.createElement("p");
     tagline.textContent = "grab a friend, share a code, play";

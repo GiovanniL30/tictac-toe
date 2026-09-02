@@ -43,6 +43,7 @@
 }
 
 .hero-sticker {
+  position: relative;
   background: var(--pink);
   border: 5px solid var(--ink);
   border-radius: 28px 12px 28px 12px;
@@ -116,8 +117,57 @@
   animation-delay: 0.75s;
 }
 
-.home-container .how-btn {
-  animation: fadeUp2 0.5s ease-out 0.85s backwards;
+.how-to-play-fab {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--yellow);
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: 1.25rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.how-to-play-fab::after {
+  content: "How to Play";
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.how-to-play-fab:hover::after {
+  opacity: 1;
+}
+
+.how-to-play-fab:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
 }
 
 .home-btns {
