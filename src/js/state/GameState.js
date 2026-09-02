@@ -6,6 +6,9 @@ export class GameState {
     CREATE_ROOM: "create-room",
     GAME_START: "game-start",
     SPECTATOR: "spectator",
+    HISTORY_ROOMS: "history-rooms",
+    HISTORY_GAMES: "history-games",
+    HISTORY_REPLAY: "history-replay",
   };
 
   constructor() {

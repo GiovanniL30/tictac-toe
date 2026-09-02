@@ -61,6 +61,10 @@ export class Home {
       this.props.onJoinRoom();
     });
 
+    watchHistoryBtn.onClick(() => {
+      this.props.onViewHistory();
+    });
+
     btnContainers.append(joinRoomBtn.element, createRoomBtn.element);
     allBtnContainers.append(btnContainers, watchHistoryBtn.element);
 

@@ -9,6 +9,9 @@ import { Game } from "../pages/Game.js";
 import { Home } from "../pages/Home.js";
 import { JoinRoom } from "../pages/JoinRoom.js";
 import { WaitingRoom } from "../pages/WaitingRoom.js";
+import { HistoryRooms } from "../pages/HistoryRooms.js";
+import { HistoryGames } from "../pages/HistoryGames.js";
+import { HistoryReplay } from "../pages/HistoryReplay.js";
 import { TicTacToePayaraApi } from "../services/TicTacToePayaraApi.js";
 import { GameState } from "../state/GameState.js";
 import { RoomNotFoundError } from "../utils/exceptions/RoomNotFoundError.js";
@@ -20,6 +23,7 @@ import { ReconnectionManager } from "./ReconnectionManager.js";
 import { SessionManager } from "../state/SessionManager.js";
 import { TicTacToeWebService } from "../services/TicTacToeWebService.js";
 import { getCurrentDateTime } from "../utils/index.js";
+import { shapeGame } from "../utils/history.js";
 
 export class AppController {
   constructor() {
@@ -32,6 +36,10 @@ export class AppController {
     this.confetti = null;
     this.vsEntrance = null;
     this.idleNudge = null;
+
+    this.historyPage = null;
+    this.historyRoomCode = null;
+    this.historyGameId = null;
 
     this.context = {
       api: this.api,
@@ -71,6 +79,7 @@ export class AppController {
 
   render() {
     this.destroyIdleNudge();
+    this.destroyHistoryPage();
     this.container.replaceChildren();
     const page = this.createPage();
 
@@ -95,6 +104,15 @@ export class AppController {
       case GameState.PAGE_STATES.GAME_START:
         return this.createGamePage();
 
+      case GameState.PAGE_STATES.HISTORY_ROOMS:
+        return this.createHistoryRoomsPage();
+
+      case GameState.PAGE_STATES.HISTORY_GAMES:
+        return this.createHistoryGamesPage();
+
+      case GameState.PAGE_STATES.HISTORY_REPLAY:
+        return this.createHistoryReplayPage();
+
       default:
         throw new Error(`Unknown page state: ${this.gameState.pageState}`);
     }
@@ -107,6 +125,7 @@ export class AppController {
     return new Home({
       onCreateRoom: () => this.setState(GameState.PAGE_STATES.CREATE_ROOM),
       onJoinRoom: () => this.setState(GameState.PAGE_STATES.JOIN_ROOM),
+      onViewHistory: () => this.openHistoryRooms(),
     });
   }
 
@@ -203,6 +222,116 @@ export class AppController {
     this.context.polling.startQuitPolling();
     this.context.polling.startServerStatusPolling();
     return game;
+  }
+
+  createHistoryRoomsPage() {
+    const page = new HistoryRooms({
+      onBack: () => this.setState(GameState.PAGE_STATES.HOME),
+      onLoadRooms: () => this.loadRooms(),
+      onOpenRoom: (roomCode) => this.openHistoryGames(roomCode),
+    });
+
+    this.historyPage = page;
+    return page;
+  }
+
+  createHistoryGamesPage() {
+    const roomCode = this.historyRoomCode;
+
+    const page = new HistoryGames({
+      roomCode,
+      onBack: () => this.setState(GameState.PAGE_STATES.HISTORY_ROOMS),
+      onLoadGames: () => this.loadRoomGames(roomCode),
+      onOpenGame: (game) => this.openHistoryReplay(game.gameId),
+    });
+
+    this.historyPage = page;
+    return page;
+  }
+
+  createHistoryReplayPage() {
+    const gameId = this.historyGameId;
+
+    const page = new HistoryReplay({
+      gameId,
+      onBack: () => this.setState(GameState.PAGE_STATES.HISTORY_GAMES),
+      onLoadReplay: () => this.loadReplay(gameId),
+    });
+
+    this.historyPage = page;
+    return page;
+  }
+
+  openHistoryRooms() {
+    this.setState(GameState.PAGE_STATES.HISTORY_ROOMS);
+  }
+
+  openHistoryGames(roomCode) {
+    this.historyRoomCode = roomCode;
+    this.setState(GameState.PAGE_STATES.HISTORY_GAMES);
+  }
+
+  openHistoryReplay(gameId) {
+    this.historyGameId = gameId;
+    this.setState(GameState.PAGE_STATES.HISTORY_REPLAY);
+  }
+
+  async loadRooms() {
+    const data = await this.webserviceApi.getAllGames();
+
+    const rooms = await Promise.all(
+      (data.list ?? []).map(async (room) => {
+        const dates = await Promise.all(
+          (room.games ?? []).map(async (game) => {
+            const moves = await this.webserviceApi.listGameMoves(game.gameid);
+            return shapeGame(moves.list).date;
+          }),
+        );
+
+        const lastPlayed = dates.filter(Boolean).sort().pop() ?? null;
+
+        return {
+          roomCode: room.roomcode,
+          gameCount: room.gamecount,
+          games: room.games ?? [],
+          lastPlayed,
+        };
+      }),
+    );
+
+    return rooms;
+  }
+
+  async loadRoomGames(roomCode) {
+    const data = await this.webserviceApi.getAllGames();
+    const room = (data.list ?? []).find((entry) => entry.roomcode === roomCode);
+
+    if (!room) {
+      return [];
+    }
+
+    const games = await Promise.all(
+      (room.games ?? []).map(async (game) => {
+        const moves = await this.webserviceApi.listGameMoves(game.gameid);
+        return shapeGame(moves.list);
+      }),
+    );
+
+    games.sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")));
+
+    return games;
+  }
+
+  async loadReplay(gameId) {
+    const moves = await this.webserviceApi.listGameMoves(gameId);
+    return shapeGame(moves.list);
+  }
+
+  destroyHistoryPage() {
+    if (this.historyPage) {
+      this.historyPage.destroy();
+      this.historyPage = null;
+    }
   }
 
   onRoomCreate = async (playerName) => {

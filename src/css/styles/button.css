@@ -87,14 +87,37 @@
 
 .back-btn-container {
   display: flex;
+  align-items: center;
   gap: 10px;
+  width: 100%;
 }
 
-.back-sm {
-  padding: 5px 15px;
-  font-size: 0.8rem;
-  border-width: 3px;
+.back-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
   box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+  color: var(--ink);
+  padding: 0;
+}
+
+.back-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.back-title {
+  font-weight: 900;
+  font-size: 1.05rem;
+  margin: 0;
 }
 
 .how-btn {
