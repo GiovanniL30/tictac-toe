@@ -19,7 +19,9 @@ export class TicTacToeWebService extends ApiClient {
    *   "datesave":  "2026-09-01 11:30:25"                    // move timestamp
    * }
    *
-   * RETURN:         server response (HTTP result of the save operation).
+   * RESPONSE (json): {
+   *   "msg": "Record saved."
+   * }
    */
   saveMove(body) {
     return this.post("/v1/game/save", body, {
@@ -37,7 +39,18 @@ export class TicTacToeWebService extends ApiClient {
    *
    * BODY:           none
    *
-   * RETURN:         array of game moves (JsonObject list) for the given gameId.
+   * RESPONSE (json): {
+   *   "msg":  "Records found",
+   *   "list": [
+   *     {
+   *       "id":        "AAA3b01d-a5d2-44b9-bbd7-2b34a58a4167",  // game UUID
+   *       "playerid":  "Gio",                                   // player name/id
+   *       "symbol":    "O",                                     // player symbol
+   *       "location":  "5",                                     // board cell (string)
+   *       "datasaved": "2026-09-01 11:30:25"                    // move timestamp
+   *     }
+   *   ]
+   * }
    */
   listGameMoves(gameId) {
     return this.get(`/v1/game/${gameId}`, {
@@ -54,7 +67,14 @@ export class TicTacToeWebService extends ApiClient {
    *
    * BODY:           none
    *
-   * RETURN:         list of games associated with the given playerId.
+   * RESPONSE (json): {
+   *   "msg":  "Records found",
+   *   "list": [
+   *     {
+   *       "id": "AAA3b01d-a5d2-44b9-bbd7-2b34a58a4167"  // game UUID the player joined
+   *     }
+   *   ]
+   * }
    */
   listPlayerGames(playerId) {
     return this.get(`/v1/list-games/${playerId}`, {
@@ -65,13 +85,24 @@ export class TicTacToeWebService extends ApiClient {
   }
 
   /**
-   * USE CASE:       Retrieve every saved game/record in the system.
+   * USE CASE:       Retrieve every saved game/record grouped by room.
    *
    * HTTP:           GET /v1/games
    *
    * BODY:           none
    *
-   * RETURN:         list of all games.
+   * RESPONSE (json): {
+   *   "msg":  "Records found",
+   *   "list": [
+   *     {
+   *       "roomcode":  "1234",
+   *       "gamecount": 2,
+   *       "games": [
+   *         { "gameid": "AAA3b01d-a5d2-44b9-bbd7-2b34a58a4167" }
+   *       ]
+   *     }
+   *   ]
+   * }
    */
   getAllGames() {
     return this.get("/v1/games", {
@@ -88,7 +119,17 @@ export class TicTacToeWebService extends ApiClient {
    *
    * BODY:           none
    *
-   * RETURN:         list of players in the room identified by roomCode.
+   * RESPONSE (json): {
+   *   "msg":     "Players found.",
+   *   "players": [
+   *     {
+   *       "playerid":     "Leo",
+   *       "score":        0,
+   *       "streakCount":  0,
+   *       "symbol":       "O"
+   *     }
+   *   ]
+   * }
    */
   getPlayersOnTheGame(roomCode) {
     return this.get(`/v1/data/players/${roomCode}`, {
@@ -108,7 +149,17 @@ export class TicTacToeWebService extends ApiClient {
    *   "symbol":   "O"     // chosen symbol (X or O)
    * }
    *
-   * RETURN:         server response (HTTP result of adding the player).
+   * RESPONSE (json): {
+   *   "msg":     "Player added.",
+   *   "players": [
+   *     {
+   *       "playerid":     "Leo",
+   *       "score":        0,
+   *       "streakCount":  0,
+   *       "symbol":       "O"
+   *     }
+   *   ]
+   * }
    */
   addPlayer(body, roomCode) {
     return this.post(`/v1/data/player/${roomCode}`, body, {
@@ -130,7 +181,15 @@ export class TicTacToeWebService extends ApiClient {
    *   "symbol":   "X"     // player symbol
    * }
    *
-   * RETURN:         server response (HTTP result of the score update).
+   * RESPONSE (json): {
+   *   "msg":           "Player score increased successfully.",
+   *   "updatedPlayer": {
+   *     "playerid":     "Leo",
+   *     "score":        1,
+   *     "streakCount":  0,
+   *     "symbol":       "X"
+   *   }
+   * }
    */
   addPlayerScore(body) {
     return this.patch(`/v1/data/player-score/increase`, body, {
@@ -148,7 +207,17 @@ export class TicTacToeWebService extends ApiClient {
    *
    * BODY:           none
    *
-   * RETURN:         server response (HTTP result of the deletion).
+   * RESPONSE (json): {
+   *   "msg":     "Game data deleted.",
+   *   "players": [
+   *     {
+   *       "playerid":     "Leo",
+   *       "score":        0,
+   *       "streakCount":  0,
+   *       "symbol":       "O"
+   *     }
+   *   ]
+   * }
    */
   deleteGame(roomCode) {
     return this.delete(`/v1/data/game/${roomCode}`, {
@@ -166,7 +235,13 @@ export class TicTacToeWebService extends ApiClient {
    *
    * BODY:           none
    *
-   * RETURN:         a generated GameKey object.
+   * RESPONSE (json): {
+   *   "msg":     "Generated Room Keys.",
+   *   "gameKey": {
+   *     "roomCode": "1234",
+   *     "gameId":   "AAA3b01d-a5d2-44b9-bbd7-2b34a58a4167"
+   *   }
+   * }
    */
   generateRoomKey() {
     return this.get("/v1/data/game-key/generate", {
@@ -183,7 +258,13 @@ export class TicTacToeWebService extends ApiClient {
    *
    * BODY:           none
    *
-   * RETURN:         the room UUID associated with gameCode.
+   * RESPONSE (json): {
+   *   "msg":     "Room Keys",
+   *   "gameKey": {
+   *     "roomCode": "1234",
+   *     "gameId":   "AAA3b01d-a5d2-44b9-bbd7-2b34a58a4167"
+   *   }
+   * }
    */
   getRoomUUID(gameCode) {
     return this.get(`/v1/data/game-key/${gameCode}`, {
@@ -203,8 +284,13 @@ export class TicTacToeWebService extends ApiClient {
    *
    * BODY:           none
    *
-   * RETURN:         server response containing the newly generated GameKey
-   *                 (roomCode + new UUID).
+   * RESPONSE (json): {
+   *   "msg":     "Game UUID regenerated.",
+   *   "gameKey": {
+   *     "roomCode": "1234",
+   *     "gameId":   "NEW-UUID-gnerated-here"  // freshly generated UUID
+   *   }
+   * }
    */
   regenerateGameUUID(roomCode) {
     return this.patch(`/v1/data/game-key/regenerate/${roomCode}`, undefined, {
