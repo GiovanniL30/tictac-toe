@@ -62,7 +62,7 @@ export class HistoryRooms {
 
     const empty = document.createElement("div");
     empty.classList.add("empty-state");
-    empty.textContent = "No games played yet — start a room to build your history!";
+    empty.textContent = "No games played yet. Start a room to build your history!";
 
     this.listEl.append(empty);
   }
