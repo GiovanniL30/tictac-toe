@@ -299,6 +299,10 @@ export class AppController {
       }),
     );
 
+    rooms.sort((a, b) =>
+      String(a.lastPlayed ?? "").localeCompare(String(b.lastPlayed ?? "")),
+    );
+
     return rooms;
   }
 
@@ -317,7 +321,7 @@ export class AppController {
       }),
     );
 
-    games.sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")));
+    games.sort((a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")));
 
     return games;
   }
