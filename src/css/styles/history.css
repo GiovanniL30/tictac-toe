@@ -162,63 +162,8 @@
   background: none;
 }
 
-.move-tracker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #fff;
-  border: 3px solid var(--ink);
-  border-radius: 999px;
-  padding: 6px 16px;
-  font-weight: 800;
-  font-size: 0.78rem;
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 16px;
-}
-
-.move-dots {
-  display: flex;
-  gap: 4px;
-}
-
-.move-dots span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #ddd;
-  border: 1.5px solid var(--ink);
-}
-
-.move-dots span.done.x {
-  background: var(--pink);
-}
-
-.move-dots span.done.o {
-  background: var(--blue);
-}
-
-.result-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #fff;
-  border: 3px solid var(--ink);
-  border-radius: 999px;
-  padding: 8px 18px;
-  font-weight: 900;
-  font-size: 0.82rem;
-  box-shadow: var(--shadow-sm);
-  opacity: 0;
-  transform: translateY(6px);
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
-  margin-bottom: 14px;
-}
-
-.result-banner.show {
-  opacity: 1;
-  transform: translateY(0);
+.history-replay .turn-indicator {
+  margin-bottom: 0;
 }
 
 .replay-btn {

@@ -1,5 +1,6 @@
 import { getWinningPattern } from "../utils/history.js";
 import { BackButton } from "../components/BackButton.js";
+import { Mascot } from "../components/Mascot.js";
 
 const STEP_MS = 2000;
 const CENTERS = [
@@ -24,13 +25,13 @@ export class HistoryReplay {
     this.boardState = null;
 
     this.titleEl = null;
+    this.turnIndicator = null;
+    this.turnText = null;
+    this.mascotX = null;
+    this.mascotO = null;
     this.boardEl = null;
-    this.dotsEl = null;
-    this.moveNumEl = null;
-    this.moveTotalEl = null;
     this.winLineEl = null;
     this.winPathEl = null;
-    this.resultBannerEl = null;
     this.replayBtn = null;
   }
 
@@ -42,25 +43,23 @@ export class HistoryReplay {
     this.titleEl = this.backButton.titleEl;
     container.append(this.backButton.element);
 
-    const tracker = document.createElement("div");
-    tracker.classList.add("move-tracker");
+    this.turnIndicator = document.createElement("div");
+    this.turnIndicator.classList.add("turn-indicator");
 
-    const trackerText = document.createElement("span");
-    trackerText.textContent = "Move ";
+    this.mascotX = document.createElement("div");
+    this.mascotX.classList.add("side-left");
+    Mascot.mount(this.mascotX, "cat");
 
-    this.moveNumEl = document.createElement("span");
-    this.moveNumEl.textContent = "0";
+    this.turnText = document.createElement("span");
+    this.turnText.classList.add("turn-text");
+    this.turnText.textContent = "…";
 
-    const slash = document.createElement("span");
-    slash.textContent = "/";
+    this.mascotO = document.createElement("div");
+    this.mascotO.classList.add("side-right");
+    Mascot.mount(this.mascotO, "dog");
 
-    this.moveTotalEl = document.createElement("span");
-    this.moveTotalEl.textContent = "0";
-
-    this.dotsEl = document.createElement("div");
-    this.dotsEl.classList.add("move-dots");
-
-    tracker.append(trackerText, this.moveNumEl, slash, this.moveTotalEl, this.dotsEl);
+    this.turnIndicator.append(this.mascotX, this.turnText, this.mascotO);
+    container.append(this.turnIndicator);
 
     const boardWrap = document.createElement("div");
     boardWrap.classList.add("board-wrap");
@@ -84,16 +83,13 @@ export class HistoryReplay {
     this.winLineEl.append(this.winPathEl);
     boardWrap.append(this.boardEl, this.winLineEl);
 
-    this.resultBannerEl = document.createElement("div");
-    this.resultBannerEl.classList.add("result-banner");
-
     this.replayBtn = document.createElement("button");
     this.replayBtn.type = "button";
     this.replayBtn.classList.add("replay-btn");
     this.replayBtn.textContent = "↻ Replay";
     this.replayBtn.addEventListener("click", () => this.startReplay());
 
-    container.append(tracker, boardWrap, this.resultBannerEl, this.replayBtn);
+    container.append(boardWrap, this.replayBtn);
 
     this.load();
 
@@ -116,8 +112,7 @@ export class HistoryReplay {
 
       if (!this.destroyed) {
         this.titleEl.textContent = "Game not found";
-        this.resultBannerEl.textContent = "Couldn't load this game.";
-        this.resultBannerEl.classList.add("show");
+        this.turnText.textContent = "Couldn't load this game.";
       }
     }
   }
@@ -134,17 +129,14 @@ export class HistoryReplay {
       cell.replaceChildren();
     });
 
-    this.dotsEl.replaceChildren();
-    this.game.moves.forEach(() => this.dotsEl.append(document.createElement("span")));
-
-    this.moveTotalEl.textContent = String(this.game.moves.length);
-    this.moveNumEl.textContent = "0";
-
     this.winLineEl.classList.remove("show");
     this.winPathEl.setAttribute("d", "");
-    this.resultBannerEl.classList.remove("show");
-    this.resultBannerEl.textContent = "";
     this.replayBtn.disabled = true;
+
+    this.resetMascots();
+    this.turnIndicator.className = "turn-indicator";
+    this.turnText.textContent = "…";
+    this.setBoardHighlight(null);
 
     this.boardState = Array(9).fill(null);
 
@@ -164,6 +156,8 @@ export class HistoryReplay {
     const move = this.game.moves[index];
     this.boardState[move.cell] = move.mark;
 
+    this.setTurn(move.mark);
+
     const cellEl = this.boardEl.children[move.cell];
     cellEl.classList.add("filled");
     cellEl.replaceChildren();
@@ -173,8 +167,7 @@ export class HistoryReplay {
     chip.textContent = move.mark;
     cellEl.append(chip);
 
-    this.dotsEl.children[index].classList.add("done", move.mark.toLowerCase());
-    this.moveNumEl.textContent = String(index + 1);
+    Mascot.place(move.mark === "X" ? this.mascotX : this.mascotO);
 
     const result = getWinningPattern(this.boardState);
     const isLast = index === this.game.moves.length - 1;
@@ -191,32 +184,68 @@ export class HistoryReplay {
         }
       }, 150);
 
-      const winnerName = result.mark === "X" ? this.game.playerX : this.game.playerO;
-      const icon = result.mark === "X" ? "🐱" : "🐶";
-      this.resultBannerEl.textContent = `${icon} ${winnerName} wins!`;
-      setTimeout(() => {
-        if (!this.destroyed) {
-          this.resultBannerEl.classList.add("show");
-        }
-      }, 300);
-
+      this.showWinner(result.mark);
       this.replayBtn.disabled = false;
       return;
     }
 
     if (isLast) {
-      this.resultBannerEl.textContent = "🤝 It's a draw!";
-      setTimeout(() => {
-        if (!this.destroyed) {
-          this.resultBannerEl.classList.add("show");
-        }
-      }, 300);
-
+      this.showDraw();
       this.replayBtn.disabled = false;
       return;
     }
 
+    this.setTurn(move.mark === "X" ? "O" : "X");
     this.playTimer = setTimeout(() => this.playStep(index + 1), STEP_MS);
+  }
+
+  setTurn(mark) {
+    const name = mark === "X" ? this.game.playerX : this.game.playerO;
+
+    this.turnIndicator.className = `turn-indicator ${mark.toLowerCase()}`;
+    this.setBoardHighlight(mark);
+    Mascot.setTurn(this.mascotX, mark === "X" ? "on" : "off");
+    Mascot.setTurn(this.mascotO, mark === "O" ? "on" : "off");
+    this.turnText.textContent = `${name}'s turn`;
+  }
+
+  setBoardHighlight(mark) {
+    this.boardEl.classList.remove("highlight", "x", "o");
+
+    if (mark) {
+      this.boardEl.classList.add("highlight", mark.toLowerCase());
+    }
+  }
+
+  showWinner(mark) {
+    const winnerName = mark === "X" ? this.game.playerX : this.game.playerO;
+
+    this.turnIndicator.className = `turn-indicator ${mark.toLowerCase()}`;
+    this.setBoardHighlight(mark);
+    Mascot.setTurn(this.mascotX, null);
+    Mascot.setTurn(this.mascotO, null);
+    Mascot.setResult(mark === "X" ? this.mascotX : this.mascotO, "slap");
+    Mascot.setResult(mark === "X" ? this.mascotO : this.mascotX, "cry");
+    this.turnText.textContent = `${winnerName} wins!`;
+  }
+
+  showDraw() {
+    this.turnIndicator.className = "turn-indicator";
+    this.setBoardHighlight(null);
+    Mascot.setTurn(this.mascotX, null);
+    Mascot.setTurn(this.mascotO, null);
+    Mascot.setResult(this.mascotX, "stare");
+    Mascot.setResult(this.mascotO, "stare");
+    this.turnText.textContent = "It's a draw!";
+  }
+
+  resetMascots() {
+    Mascot.setTurn(this.mascotX, null);
+    Mascot.setTurn(this.mascotO, null);
+    Mascot.setResult(this.mascotX, null);
+    Mascot.setResult(this.mascotO, null);
+    Mascot.setEmotion(this.mascotX, "smile");
+    Mascot.setEmotion(this.mascotO, "smile");
   }
 
   destroy() {
