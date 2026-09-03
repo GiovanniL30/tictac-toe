@@ -8,6 +8,7 @@ export class GameState {
     SPECTATOR: "spectator",
     HISTORY_ROOMS: "history-rooms",
     HISTORY_GAMES: "history-games",
+    HISTORY_PLAYER_GAMES: "history-player-games",
     HISTORY_REPLAY: "history-replay",
   };
 

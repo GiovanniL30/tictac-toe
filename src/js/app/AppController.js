@@ -11,6 +11,7 @@ import { JoinRoom } from "../pages/JoinRoom.js";
 import { WaitingRoom } from "../pages/WaitingRoom.js";
 import { HistoryRooms } from "../pages/HistoryRooms.js";
 import { HistoryGames } from "../pages/HistoryGames.js";
+import { HistoryPlayerGames } from "../pages/HistoryPlayerGames.js";
 import { HistoryReplay } from "../pages/HistoryReplay.js";
 import { TicTacToePayaraApi } from "../services/TicTacToePayaraApi.js";
 import { GameState } from "../state/GameState.js";
@@ -40,6 +41,9 @@ export class AppController {
     this.historyPage = null;
     this.historyRoomCode = null;
     this.historyGameId = null;
+    this.historyPlayerId = null;
+    this.historyReturnState = GameState.PAGE_STATES.HISTORY_GAMES;
+    this.historyTab = "rooms";
 
     this.context = {
       api: this.api,
@@ -109,6 +113,9 @@ export class AppController {
 
       case GameState.PAGE_STATES.HISTORY_GAMES:
         return this.createHistoryGamesPage();
+
+      case GameState.PAGE_STATES.HISTORY_PLAYER_GAMES:
+        return this.createHistoryPlayerGamesPage();
 
       case GameState.PAGE_STATES.HISTORY_REPLAY:
         return this.createHistoryReplayPage();
@@ -228,7 +235,13 @@ export class AppController {
     const page = new HistoryRooms({
       onBack: () => this.setState(GameState.PAGE_STATES.HOME),
       onLoadRooms: () => this.loadRooms(),
+      onLoadPlayers: () => this.loadPlayers(),
       onOpenRoom: (roomCode) => this.openHistoryGames(roomCode),
+      onOpenPlayer: (playerId) => this.openHistoryPlayerGames(playerId),
+      initialTab: this.historyTab,
+      onTabChange: (tab) => {
+        this.historyTab = tab;
+      },
     });
 
     this.historyPage = page;
@@ -242,7 +255,26 @@ export class AppController {
       roomCode,
       onBack: () => this.setState(GameState.PAGE_STATES.HISTORY_ROOMS),
       onLoadGames: () => this.loadRoomGames(roomCode),
-      onOpenGame: (game) => this.openHistoryReplay(game.gameId),
+      onOpenGame: (game) =>
+        this.openHistoryReplay(game.gameId, GameState.PAGE_STATES.HISTORY_GAMES),
+    });
+
+    this.historyPage = page;
+    return page;
+  }
+
+  createHistoryPlayerGamesPage() {
+    const playerId = this.historyPlayerId;
+
+    const page = new HistoryPlayerGames({
+      playerId,
+      onBack: () => this.setState(GameState.PAGE_STATES.HISTORY_ROOMS),
+      onLoadGames: () => this.loadPlayerGames(playerId),
+      onOpenGame: (game) =>
+        this.openHistoryReplay(
+          game.gameId,
+          GameState.PAGE_STATES.HISTORY_PLAYER_GAMES,
+        ),
     });
 
     this.historyPage = page;
@@ -254,7 +286,7 @@ export class AppController {
 
     const page = new HistoryReplay({
       gameId,
-      onBack: () => this.setState(GameState.PAGE_STATES.HISTORY_GAMES),
+      onBack: () => this.setState(this.historyReturnState),
       onLoadReplay: () => this.loadReplay(gameId),
     });
 
@@ -271,8 +303,18 @@ export class AppController {
     this.setState(GameState.PAGE_STATES.HISTORY_GAMES);
   }
 
-  openHistoryReplay(gameId) {
+  openHistoryPlayerGames(playerId) {
+    this.historyPlayerId = playerId;
+    this.setState(GameState.PAGE_STATES.HISTORY_PLAYER_GAMES);
+  }
+
+  openHistoryReplay(gameId, returnState) {
     this.historyGameId = gameId;
+
+    if (returnState) {
+      this.historyReturnState = returnState;
+    }
+
     this.setState(GameState.PAGE_STATES.HISTORY_REPLAY);
   }
 
@@ -318,6 +360,40 @@ export class AppController {
       (room.games ?? []).map(async (game) => {
         const moves = await this.webserviceApi.listGameMoves(game.gameid);
         return shapeGame(moves.list);
+      }),
+    );
+
+    games.sort((a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")));
+
+    return games;
+  }
+
+  async loadPlayers() {
+    const data = await this.webserviceApi.getAllPlayersPlayedGames();
+
+    const players = (data.players ?? []).map((player) => ({
+      playerId: player.playerid,
+      gameCount: (player.games ?? []).length,
+      games: player.games ?? [],
+    }));
+
+    players.sort((a, b) => String(a.playerId ?? "").localeCompare(String(b.playerId ?? "")));
+
+    return players;
+  }
+
+  async loadPlayerGames(playerId) {
+    const data = await this.webserviceApi.getAllPlayersPlayedGames();
+    const player = (data.players ?? []).find((entry) => entry.playerid === playerId);
+
+    if (!player) {
+      return [];
+    }
+
+    const games = await Promise.all(
+      (player.games ?? []).map(async (game) => {
+        const moves = await this.webserviceApi.listGameMoves(game.gameid);
+        return { ...shapeGame(moves.list), roomCode: game.roomcode };
       }),
     );
 
