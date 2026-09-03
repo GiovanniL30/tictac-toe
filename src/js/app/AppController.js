@@ -256,7 +256,10 @@ export class AppController {
       onBack: () => this.setState(GameState.PAGE_STATES.HISTORY_ROOMS),
       onLoadGames: () => this.loadRoomGames(roomCode),
       onOpenGame: (game) =>
-        this.openHistoryReplay(game.gameId, GameState.PAGE_STATES.HISTORY_GAMES),
+        this.openHistoryReplay(
+          game.gameId,
+          GameState.PAGE_STATES.HISTORY_GAMES,
+        ),
     });
 
     this.historyPage = page;
@@ -363,7 +366,9 @@ export class AppController {
       }),
     );
 
-    games.sort((a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")));
+    games.sort((a, b) =>
+      String(a.date ?? "").localeCompare(String(b.date ?? "")),
+    );
 
     return games;
   }
@@ -377,14 +382,18 @@ export class AppController {
       games: player.games ?? [],
     }));
 
-    players.sort((a, b) => String(a.playerId ?? "").localeCompare(String(b.playerId ?? "")));
+    players.sort((a, b) =>
+      String(a.playerId ?? "").localeCompare(String(b.playerId ?? "")),
+    );
 
     return players;
   }
 
   async loadPlayerGames(playerId) {
     const data = await this.webserviceApi.getAllPlayersPlayedGames();
-    const player = (data.players ?? []).find((entry) => entry.playerid === playerId);
+    const player = (data.players ?? []).find(
+      (entry) => entry.playerid === playerId,
+    );
 
     if (!player) {
       return [];
@@ -397,7 +406,9 @@ export class AppController {
       }),
     );
 
-    games.sort((a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")));
+    games.sort((a, b) =>
+      String(a.date ?? "").localeCompare(String(b.date ?? "")),
+    );
 
     return games;
   }
@@ -517,7 +528,11 @@ export class AppController {
   }
 
   onGameEnd = async (winner, isSpectator) => {
-    if (!isSpectator && winner !== "DRAW" && winner === this.gameState.playerCode) {
+    if (
+      !isSpectator &&
+      winner !== "DRAW" &&
+      winner === this.gameState.playerCode
+    ) {
       await this.webserviceApi
         .addPlayerScore({
           playerid: this.gameState.playerName,
@@ -531,8 +546,12 @@ export class AppController {
 
     if (winner !== "DRAW") {
       try {
-        const data = await this.webserviceApi.getPlayersOnTheGame(this.gameState.key);
-        const entry = (data.players ?? []).find((player) => player.symbol === winner);
+        const data = await this.webserviceApi.getPlayersOnTheGame(
+          this.gameState.key,
+        );
+        const entry = (data.players ?? []).find(
+          (player) => player.symbol === winner,
+        );
         winnerName = entry?.playerId ?? null;
       } catch (e) {
         console.error("Failed to fetch players:", e);
@@ -588,8 +607,7 @@ export class AppController {
       });
 
       await this.webserviceApi.saveMove({
-        gameid: this.gameState.gameId,
-        roomcode: this.gameState.key,
+        gameid: `${this.gameState.key}_${this.gameState.gameId}`,
         symbol: this.gameState.playerCode,
         location: i,
         playerid: this.gameState.playerName,
@@ -645,7 +663,9 @@ export class AppController {
     let playerO = "Player O";
 
     try {
-      const data = await this.webserviceApi.getPlayersOnTheGame(this.gameState.key);
+      const data = await this.webserviceApi.getPlayersOnTheGame(
+        this.gameState.key,
+      );
 
       for (const player of data.players ?? []) {
         if (player.symbol === PLAYER_ROLE.X) {
