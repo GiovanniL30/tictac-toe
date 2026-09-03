@@ -8,7 +8,6 @@ export class TicTacToeWebService extends ApiClient {
   /**
    * USE CASE:       Save a player's move for a game (appends a new line to the game's record file).
    *
-   * HTTP:           POST /v1/game/save
    *
    * BODY (json): {
    *   "gameid":    "AAA3b01d-a5d2-44b9-bbd7-2b34a58a4167",  // UUID of the game
@@ -24,7 +23,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   saveMove(body) {
-    return this.post("/v1/game/save", body, {
+    return this.post("/game/save", body, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -34,8 +33,6 @@ export class TicTacToeWebService extends ApiClient {
 
   /**
    * USE CASE:       Fetch all recorded moves of a specific game by its UUID.
-   *
-   * HTTP:           GET /v1/game/{gameId}
    *
    * BODY:           none
    *
@@ -53,7 +50,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   listGameMoves(gameId) {
-    return this.get(`/v1/game/${gameId}`, {
+    return this.get(`/game/${gameId}`, {
       headers: {
         Accept: "application/json",
       },
@@ -63,7 +60,6 @@ export class TicTacToeWebService extends ApiClient {
   /**
    * USE CASE:       List all games a specific player participated in.
    *
-   * HTTP:           GET /v1/list-games/{playerId}
    *
    * BODY:           none
    *
@@ -77,7 +73,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   listPlayerGames(playerId) {
-    return this.get(`/v1/list-games/${playerId}`, {
+    return this.get(`/player/${playerId}/games`, {
       headers: {
         Accept: "application/json",
       },
@@ -87,7 +83,6 @@ export class TicTacToeWebService extends ApiClient {
   /**
    * USE CASE:       Retrieve every saved game/record grouped by room.
    *
-   * HTTP:           GET /v1/games
    *
    * BODY:           none
    *
@@ -105,7 +100,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   getAllGames() {
-    return this.get("/v1/games", {
+    return this.get("/game/list", {
       headers: {
         Accept: "application/json",
       },
@@ -115,7 +110,6 @@ export class TicTacToeWebService extends ApiClient {
   /**
    * USE CASE:       Retrieve every saved players/record containing all games they have played.
    *
-   * HTTP:           GET /v1/game/players
    *
    * BODY:           none
    *
@@ -135,7 +129,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   getAllPlayersPlayedGames() {
-    return this.get("/v1/game/players", {
+    return this.get("/game/players", {
       headers: {
         Accept: "application/json",
       },
@@ -145,7 +139,6 @@ export class TicTacToeWebService extends ApiClient {
   /**
    * USE CASE:       Get the list of players currently in a given room.
    *
-   * HTTP:           GET /v1/data/players/{roomCode}
    *
    * BODY:           none
    *
@@ -162,7 +155,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   getPlayersOnTheGame(roomCode) {
-    return this.get(`/v1/data/players/${roomCode}`, {
+    return this.get(`/data/players/${roomCode}`, {
       headers: {
         Accept: "application/json",
       },
@@ -172,7 +165,6 @@ export class TicTacToeWebService extends ApiClient {
   /**
    * USE CASE:       Add a new player to a room with a chosen symbol.
    *
-   * HTTP:           POST /v1/data/player/{roomCode}
    *
    * BODY (json): {
    *   "playerid": "Leo",  // player name/id
@@ -192,7 +184,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   addPlayer(body, roomCode) {
-    return this.post(`/v1/data/player/${roomCode}`, body, {
+    return this.post(`/data/player/${roomCode}`, body, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -203,7 +195,6 @@ export class TicTacToeWebService extends ApiClient {
   /**
    * USE CASE:       Increment a player's score (typically called on a win).
    *
-   * HTTP:           PATCH /v1/data/player-score/increase
    *
    * BODY (json): {
    *   "playerid": "Leo",  // player name/id
@@ -222,7 +213,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   addPlayerScore(body) {
-    return this.patch(`/v1/data/player-score/increase`, body, {
+    return this.patch(`/data/player-score/increase`, body, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -233,7 +224,6 @@ export class TicTacToeWebService extends ApiClient {
   /**
    * USE CASE:       Delete a game by its room code.
    *
-   * HTTP:           DELETE /v1/data/game/{roomCode}
    *
    * BODY:           none
    *
@@ -250,7 +240,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   deleteGame(roomCode) {
-    return this.delete(`/v1/data/game/${roomCode}`, {
+    return this.delete(`/data/game/${roomCode}`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -261,7 +251,6 @@ export class TicTacToeWebService extends ApiClient {
   /**
    * USE CASE:       Generate a new room key for a game.
    *
-   * HTTP:           GET /v1/data/game-key/generate
    *
    * BODY:           none
    *
@@ -274,7 +263,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   generateRoomKey() {
-    return this.get("/v1/data/game-key/generate", {
+    return this.get("/data/game-key/generate", {
       headers: {
         Accept: "application/json",
       },
@@ -284,7 +273,6 @@ export class TicTacToeWebService extends ApiClient {
   /**
    * USE CASE:       Look up the game UUID that maps to a given game code.
    *
-   * HTTP:           GET /v1/data/game-key/{gameCode}
    *
    * BODY:           none
    *
@@ -297,7 +285,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   getRoomUUID(gameCode) {
-    return this.get(`/v1/data/game-key/${gameCode}`, {
+    return this.get(`/data/game-key/${gameCode}`, {
       headers: {
         Accept: "application/json",
       },
@@ -310,7 +298,6 @@ export class TicTacToeWebService extends ApiClient {
    *                 generated UUID (does NOT remove the room/players).
    *                 USED FOR PLAY AGAIN HERE ON FRONTEND
    *
-   * HTTP:           PATCH /v1/data/game-key/regenerate/{roomCode}
    *
    * BODY:           none
    *
@@ -323,7 +310,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   regenerateGameUUID(roomCode) {
-    return this.patch(`/v1/data/game-key/regenerate/${roomCode}`, undefined, {
+    return this.patch(`/data/game-key/regenerate/${roomCode}`, undefined, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
