@@ -13,7 +13,8 @@ export class HistoryPlayerGames {
     const container = document.createElement("div");
     container.classList.add("history-container");
 
-    container.append(new BackButton(this.props.onBack, this.props.playerId ?? "Player").element);
+    const title = this.props.playerId ? `Player ${this.props.playerId}` : "Player";
+    container.append(new BackButton(this.props.onBack, title).element);
 
     const list = document.createElement("div");
     list.classList.add("list");
@@ -90,7 +91,7 @@ export class HistoryPlayerGames {
 
       const chip = document.createElement("div");
       chip.classList.add("result-chip");
-      chip.classList.add(isDraw ? "draw" : isIncomplete ? "draw" : playerWon ? "x" : "o");
+      chip.classList.add(isDraw || isIncomplete ? "draw" : playerWon ? "win" : "lose");
       chip.textContent = isDraw ? "=" : isIncomplete ? "…" : playerWon ? "W" : "L";
 
       const meta = document.createElement("div");

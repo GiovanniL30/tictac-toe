@@ -200,6 +200,14 @@
   background: var(--blue);
 }
 
+.result-chip.win {
+  background: var(--green);
+}
+
+.result-chip.lose {
+  background: var(--red);
+}
+
 .result-chip.draw {
   background: #bbb;
 }

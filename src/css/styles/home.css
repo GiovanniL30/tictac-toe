@@ -181,6 +181,32 @@
   animation: btnPop 0.45s ease-out 0.65s backwards;
 }
 
+/* Small screens: stack the actions in one column.
+   Order: Create Room, Join Room, View History.
+   View History is de-emphasized as a small tertiary button. */
+@media (max-width: 560px) {
+  .home-btns {
+    align-items: stretch;
+  }
+
+  .home-btns .btn-row {
+    display: contents;
+  }
+
+  .home-btns .btn-row .btn.blue {
+    order: 1;
+  }
+
+  .home-btns .btn-row .btn.secondary {
+    order: 2;
+  }
+
+  .home-btns > .btn.ghost {
+    order: 3;
+    width: 100%;
+  }
+}
+
 @keyframes dropBounce {
   0% {
     opacity: 0;
