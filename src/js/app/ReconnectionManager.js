@@ -78,7 +78,8 @@ export class ReconnectionManager {
 
   async handleRestartOrQuit() {
     const gameKey = this.context.gameState.key;
-    const isSpectator = this.context.gameState.playerCode === PLAYER_ROLE.SPECTATOR;
+    const isSpectator =
+      this.context.gameState.playerCode === PLAYER_ROLE.SPECTATOR;
 
     try {
       if (isSpectator) {
@@ -106,7 +107,22 @@ export class ReconnectionManager {
         : await this.context.api.createGame(gameKey);
       console.log("createGame response:", response);
 
-      if (this.context.gameState.playerCode === PLAYER_ROLE.O && response === PLAYER_ROLE.O) {
+      if (
+        this.context.gameState.playerCode === PLAYER_ROLE.O &&
+        response === PLAYER_ROLE.O
+      ) {
+        try {
+          const { gameKey } = await this.context.webserviceApi.getRoomUUID(
+            this.context.gameState.key,
+          );
+
+          this.context.gameState.gameId = gameKey.gameId;
+        } catch (e) {
+          console.log(e);
+          console.log("failed to get new room uuid");
+          return;
+        }
+
         this.context.polling.stopQuitPolling();
         this.stopOpponentGracePeriod();
 
@@ -136,7 +152,9 @@ export class ReconnectionManager {
           }
 
           if (i < 2) {
-            await new Promise((resolve) => setTimeout(resolve, OPPONENT_GRACE_PERIOD_MS));
+            await new Promise((resolve) =>
+              setTimeout(resolve, OPPONENT_GRACE_PERIOD_MS),
+            );
           }
         }
 
@@ -157,7 +175,10 @@ export class ReconnectionManager {
     }
   }
 
-  async pollForSpectatorReturn(attempts = SPECTATOR_RETURN_ATTEMPTS, delayMs = SPECTATOR_RETURN_DELAY_MS) {
+  async pollForSpectatorReturn(
+    attempts = SPECTATOR_RETURN_ATTEMPTS,
+    delayMs = SPECTATOR_RETURN_DELAY_MS,
+  ) {
     const gameKey = this.context.gameState.key;
     this.showSpectatorReconnecting();
 
@@ -218,7 +239,8 @@ export class ReconnectionManager {
     this.context.teardownActiveGame();
     this.context.modals.closeActive();
 
-    const isSpectator = this.context.gameState.playerCode === PLAYER_ROLE.SPECTATOR;
+    const isSpectator =
+      this.context.gameState.playerCode === PLAYER_ROLE.SPECTATOR;
 
     const modal = new Modal({
       title: isSpectator ? "Game Ended" : "Opponent Left",
