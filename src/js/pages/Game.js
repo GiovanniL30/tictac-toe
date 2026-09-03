@@ -309,7 +309,7 @@ export class Game {
 
   // BOARD SYNC
   updateBoard(response) {
-    const { board, currentTurn, winner, lastFilled } = this.board.update(response, {
+    const { board, currentTurn, winner, winPattern, lastFilled } = this.board.update(response, {
       player: this.props.player,
       gameOver: this.gameOver,
     });
@@ -319,12 +319,17 @@ export class Game {
     this.props.onTurnChange(currentTurn);
 
     if (winner && !this.gameOver) {
+      if (winner !== "DRAW" && winPattern) {
+        this.board.showWinLine(winPattern);
+      }
+
       this.handleGameEnd(winner);
     }
 
     if (!winner && this.gameOver) {
       this.gameOver = false;
       this.lastWinner = null;
+      this.board.hideWinLine();
     }
 
     this.refreshTurnState();

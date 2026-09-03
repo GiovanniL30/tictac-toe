@@ -1,9 +1,35 @@
+const WINNING_PATTERNS = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+];
+
+const CELL_CENTERS = [
+  [50, 50],
+  [150, 50],
+  [250, 50],
+  [50, 150],
+  [150, 150],
+  [250, 150],
+  [50, 250],
+  [150, 250],
+  [250, 250],
+];
+
 export class Board {
   constructor(props = {}) {
     this.props = props;
 
     this.container = null;
     this.boardContainer = null;
+    this.winLineEl = null;
+    this.winPathEl = null;
+    this.winTimer = null;
 
     this.state = null; // array of 9 cell values ("X" | "O" | "" | undefined)
     this.moveInFlight = false;
@@ -12,8 +38,8 @@ export class Board {
 
   // RENDER
   render() {
-    const boardWrapper = document.createElement("div");
-    boardWrapper.classList.add("board-wrap");
+    this.boardWrapper = document.createElement("div");
+    this.boardWrapper.classList.add("board-wrap");
 
     const boardContainer = document.createElement("div");
     boardContainer.classList.add("board");
@@ -58,10 +84,19 @@ export class Board {
       boardContainer.append(cell);
     }
 
-    boardWrapper.append(boardContainer);
-    this.container = boardWrapper;
+    this.winLineEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    this.winLineEl.classList.add("win-line");
+    this.winLineEl.setAttribute("viewBox", "0 0 300 300");
 
-    return boardWrapper;
+    this.winPathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    this.winPathEl.setAttribute("d", "");
+
+    this.winLineEl.append(this.winPathEl);
+
+    this.boardWrapper.append(boardContainer, this.winLineEl);
+    this.container = this.boardWrapper;
+
+    return this.boardWrapper;
   }
 
   // PARSING
@@ -77,22 +112,21 @@ export class Board {
     return xCount <= oCount ? "X" : "O";
   }
 
-  getWinner(board = this.state) {
-    const winningPatterns = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ];
-
-    for (const [a, b, c] of winningPatterns) {
+  getWinningPattern(board = this.state) {
+    for (const [a, b, c] of WINNING_PATTERNS) {
       if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-        return board[a];
+        return { mark: board[a], pattern: [a, b, c] };
       }
+    }
+
+    return null;
+  }
+
+  getWinner(board = this.state) {
+    const win = this.getWinningPattern(board);
+
+    if (win) {
+      return win.mark;
     }
 
     const isDraw = board.every((value) => value === "X" || value === "O");
@@ -167,7 +201,9 @@ export class Board {
     this.state = board;
 
     const currentTurn = this.getCurrentTurn(board);
-    const winner = this.getWinner(board);
+    const win = this.getWinningPattern(board);
+    const winner = win ? win.mark : board.every((value) => value === "X" || value === "O") ? "DRAW" : null;
+    const winPattern = win ? win.pattern : null;
 
     if (this.moveInFlight && !gameOver && this.pendingCellIndex != null && (currentTurn !== player || this.state[this.pendingCellIndex] === player)) {
       this.moveInFlight = false;
@@ -210,12 +246,46 @@ export class Board {
       }
     });
 
-    return { board, currentTurn, winner, lastFilled };
+    return { board, currentTurn, winner, winPattern, lastFilled };
+  }
+
+  // WIN LINE
+  showWinLine(pattern) {
+    if (!pattern || pattern.length !== 3) {
+      return;
+    }
+
+    const [a, , c] = pattern;
+    const [x1, y1] = CELL_CENTERS[a];
+    const [x2, y2] = CELL_CENTERS[c];
+
+    clearTimeout(this.winTimer);
+
+    this.winPathEl.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`);
+    this.winLineEl.classList.remove("show");
+
+    this.winTimer = setTimeout(() => {
+      this.winLineEl.classList.add("show");
+    }, 150);
+  }
+
+  hideWinLine() {
+    clearTimeout(this.winTimer);
+    this.winTimer = null;
+
+    if (this.winPathEl) {
+      this.winPathEl.setAttribute("d", "");
+    }
+
+    if (this.winLineEl) {
+      this.winLineEl.classList.remove("show");
+    }
   }
 
   reset() {
     this.state = null;
     this.moveInFlight = false;
     this.pendingCellIndex = null;
+    this.hideWinLine();
   }
 }
