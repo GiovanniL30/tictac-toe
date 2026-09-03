@@ -129,7 +129,7 @@ export class TicTacToeWebService extends ApiClient {
    * }
    */
   getAllPlayersPlayedGames() {
-    return this.get("/game/players", {
+    return this.get("/player/list", {
       headers: {
         Accept: "application/json",
       },
