@@ -113,6 +113,36 @@ export class TicTacToeWebService extends ApiClient {
   }
 
   /**
+   * USE CASE:       Retrieve every saved players/record containing all games they have played.
+   *
+   * HTTP:           GET /v1/game/players
+   *
+   * BODY:           none
+   *
+   * RESPONSE (json): {
+   *   "msg":  "Records found",
+   *   "players": [
+   *   {
+   *         "playerid": "123",
+   *         "games": [
+   *            {
+   *                "gameid": "417fe8a6-6658-4c9e-9d95-981535b12511",
+   *                "roomcode": "TLO6"
+   *            }
+   *         ]
+   *     },
+   *   ]
+   * }
+   */
+  getAllPlayersPlayedGames() {
+    return this.get("/v1/game/players", {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+  }
+
+  /**
    * USE CASE:       Get the list of players currently in a given room.
    *
    * HTTP:           GET /v1/data/players/{roomCode}
