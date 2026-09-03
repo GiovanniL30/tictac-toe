@@ -97,23 +97,23 @@
   background: var(--pink);
 }
 
-.home-container .hero-mascots {
+.home-container.entrance .hero-mascots {
   animation: dropBounce 0.6s ease-out 0s backwards;
 }
 
-.home-container .hero-sticker {
+.home-container.entrance .hero-sticker {
   animation: heroSlam 0.55s ease-out 0.15s backwards;
 }
 
-.home-container .tagline {
+.home-container.entrance .tagline {
   animation: fadeUpWithRotate 0.5s ease-out 0.45s backwards;
 }
 
-.home-container .btn-row .btn {
+.home-container.entrance .btn-row .btn {
   animation: btnPop 0.45s ease-out 0.65s backwards;
 }
 
-.home-container .btn-row .btn:last-child {
+.home-container.entrance .btn-row .btn:last-child {
   animation-delay: 0.75s;
 }
 
@@ -175,6 +175,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.home-container.entrance .home-btns {
   animation: btnPop 0.45s ease-out 0.65s backwards;
 }
 
